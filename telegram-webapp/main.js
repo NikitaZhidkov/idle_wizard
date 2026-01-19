@@ -689,6 +689,18 @@ function gameOver() {
 }
 
 function restartGame() {
+    // Stop any running battle interval first
+    if (battleInterval) {
+        clearInterval(battleInterval);
+        setBattleInterval(null);
+    }
+
+    // Stop shield minigame timer if running
+    if (shieldGame.timerInterval) {
+        clearInterval(shieldGame.timerInterval);
+    }
+
+    // Reset all game state - equivalent to a fresh page load
     game.gold = 0;
     game.gems = 0;
     game.level = 1;
@@ -696,6 +708,7 @@ function restartGame() {
     game.exp = 0;
     game.expToLevel = 100;
     game.currentHp = 100;
+    game.maxHp = 100;
     game.bestFloor = 0;
     game.totalKills = 0;
     game.totalGoldEarned = 0;
@@ -724,14 +737,17 @@ function restartGame() {
     game.unlockedSpells = [];
     game.activeBuffs = [];
     game.buffStats = { atk: 0, def: 0, hp: 0, crit: 0, critDmg: 0, goldBonus: 0, xpBonus: 0, lifesteal: 0, regenFlat: 0, dodge: 0, thorns: 0, executeDmg: 0, spellPower: 0, deathSaves: 0, doubleAttack: false };
+    // Reset tutorial flags so tutorials show again on new game
     game.spellTutorialDone = false;
     game.shieldTutorialDone = false;
 
+    // Reset all battle state
     setCurrentCreature(null);
     setCreatureHp(0);
     setCreatureBuffs({});
     setTurnCount(0);
 
+    // Reset shield minigame state completely
     setShieldGame({
         active: false,
         currentColor: null,
@@ -744,6 +760,7 @@ function restartGame() {
         tutorialShown: false
     });
 
+    // Hide all popups and overlays
     document.getElementById('gameoverPopup').style.display = 'none';
     document.getElementById('buffSelectionPanel').style.display = 'none';
     document.getElementById('shieldMinigame').classList.remove('active');
@@ -751,15 +768,18 @@ function restartGame() {
     document.getElementById('spellTutorialOverlay').style.display = 'none';
     document.getElementById('roomTransition').classList.remove('active');
 
-    if (shieldGame.timerInterval) {
-        clearInterval(shieldGame.timerInterval);
+    // Clear battle log
+    if (battleLog) {
+        battleLog.innerHTML = '';
     }
 
     renderActiveBuffs();
     updateUI();
 
+    // Clear saved game so it starts fresh
+    localStorage.removeItem('wizardDuels');
+
     showHouseSelection();
-    saveGame();
 }
 
 function showHouseSelection() {
