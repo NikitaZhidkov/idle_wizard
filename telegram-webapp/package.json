@@ -1,0 +1,26 @@
+{
+  "name": "telegram-webapp",
+  "version": "1.0.0",
+  "description": "Wizard Duels - Telegram Web App Game",
+  "main": "main.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:init": "npx playwright test -g 'Game Initialization'",
+    "test:tutorial": "npx playwright test -g 'Spell Tutorial'",
+    "test:battle": "npx playwright test -g 'Battle Mechanics'",
+    "test:boss": "npx playwright test -g 'Boss and Shield'",
+    "test:restart": "npx playwright test -g 'Game Over and Restart'",
+    "test:flow": "npx playwright test -g 'Full Game Flow'",
+    "serve": "python3 -m http.server 8080"
+  },
+  "keywords": ["telegram", "game", "wizard"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}
