@@ -24,7 +24,7 @@ export let game = {
     selectingBuff: false, // freeze cooldowns while selecting
     discoveredCreatures: [], totalKills: 0, totalGoldEarned: 0,
     lastOnline: Date.now(), felixUsed: false,
-    runKills: 0, runGold: 0, bestFloor: 0,
+    runKills: 0, runGold: 0, bestFloor: 0, encounterIndex: 0,
     inBattle: false, roomSeed: 0, lastGoldGain: 0,
     // Roguelike buffs for current run
     activeBuffs: [],

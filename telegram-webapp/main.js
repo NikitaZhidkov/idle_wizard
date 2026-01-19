@@ -110,6 +110,7 @@ function initUI() {
         updateUI,
         gameOver,
         showRoomTransition,
+        showVictory,
         drawCreature,
         renderCreatureStatus,
         renderBattleCreatureCard
@@ -358,6 +359,22 @@ function gameOver() {
     saveGame();
 }
 
+function showVictory() {
+    game.gameStarted = false;
+    if (game.floor > game.bestFloor) game.bestFloor = game.floor;
+
+    document.getElementById('victoryKills').textContent = game.runKills;
+    document.getElementById('victoryGold').textContent = formatNum(game.runGold);
+    document.getElementById('victoryCombo').textContent = game.maxCombo;
+    document.getElementById('victoryPopup').style.display = 'flex';
+
+    // Victory sound - triumphant tone
+    playSound(800, 'sine', 0.3);
+    setTimeout(() => playSound(1000, 'sine', 0.3), 150);
+    setTimeout(() => playSound(1200, 'sine', 0.3), 300);
+    saveGame();
+}
+
 function restartGame() {
     // Stop any running battle interval first
     const currentInterval = getBattleInterval();
@@ -376,6 +393,7 @@ function restartGame() {
     game.gems = 0;
     game.level = 1;
     game.floor = 1;
+    game.encounterIndex = 0;
     game.exp = 0;
     game.expToLevel = 100;
     game.currentHp = 100;
@@ -433,6 +451,7 @@ function restartGame() {
 
     // Hide all popups and overlays
     document.getElementById('gameoverPopup').style.display = 'none';
+    document.getElementById('victoryPopup').style.display = 'none';
     document.getElementById('buffSelectionPanel').style.display = 'none';
     document.getElementById('shieldMinigame').classList.remove('active');
     document.getElementById('shieldTutorialOverlay').style.display = 'none';
@@ -613,6 +632,9 @@ function init() {
 
     // Game over retry button
     document.getElementById('gameoverRetryBtn').addEventListener('click', restartGame);
+
+    // Victory play again button
+    document.getElementById('victoryPlayAgainBtn').addEventListener('click', restartGame);
 
     // Start game
     if (!game.houseChosen || !game.gameStarted) {

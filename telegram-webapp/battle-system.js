@@ -1,7 +1,7 @@
 // Battle System module - Combat logic, creature spawning, damage calculations
 // Extracted from main.js
 
-import { MAGIC_TYPES, ABILITIES, CREATURES, BOSSES, ROOM_THEMES, SPELLS } from './data.js';
+import { MAGIC_TYPES, ABILITIES, CREATURES, BOSSES, ROOM_THEMES, SPELLS, ENCOUNTER_ORDER } from './data.js';
 import {
     game,
     currentCreature,
@@ -41,6 +41,7 @@ let creatureCanvas = null;
 let updateUICallback = null;
 let gameOverCallback = null;
 let showRoomTransitionCallback = null;
+let showVictoryCallback = null;
 let drawCreatureCallback = null;
 let renderCreatureStatusCallback = null;
 let renderBattleCreatureCardCallback = null;
@@ -52,6 +53,7 @@ export function initBattleSystem(callbacks) {
     updateUICallback = callbacks.updateUI;
     gameOverCallback = callbacks.gameOver;
     showRoomTransitionCallback = callbacks.showRoomTransition;
+    showVictoryCallback = callbacks.showVictory;
     drawCreatureCallback = callbacks.drawCreature;
     renderCreatureStatusCallback = callbacks.renderCreatureStatus;
     renderBattleCreatureCardCallback = callbacks.renderBattleCreatureCard;
@@ -97,17 +99,18 @@ export function spawnCreature() {
     game.fearDebuff = false;
     game.poisonStacks = 0;
 
-    const isBoss = game.floor % 5 === 0;
+    // Use fixed encounter order - each creature/boss appears exactly once
+    const encounter = ENCOUNTER_ORDER[game.encounterIndex];
     let template;
+    let isBoss = false;
 
-    if (isBoss) {
-        const bossIdx = Math.min(Math.floor(game.floor / 5) - 1, BOSSES.length - 1);
-        template = BOSSES[bossIdx];
+    if (encounter.type === 'boss') {
+        template = BOSSES[encounter.index];
+        isBoss = true;
         addLog(`⚠️ BOSS: ${template.name}!`, 'log-boss');
         playSound(200, 'sawtooth', 0.3);
     } else {
-        const maxIdx = Math.min(Math.floor(game.floor / 3), CREATURES.length - 1);
-        template = CREATURES[Math.floor(Math.random() * (maxIdx + 1))];
+        template = CREATURES[encounter.index];
     }
 
     const balanced = calculateBalancedEnemy();
@@ -297,6 +300,21 @@ export function checkCreatureDeath() {
         createParticles(220, 80, MAGIC_TYPES[currentCreature.magic].color, 6);
 
         game.floor++;
+        game.encounterIndex++;
+
+        // Check for victory after defeating Voldemort (final encounter)
+        if (game.encounterIndex >= ENCOUNTER_ORDER.length) {
+            setCurrentCreature(null);
+            game.inBattle = false;
+            if (updateUICallback) updateUICallback();
+            saveGame();
+
+            setTimeout(() => {
+                if (showVictoryCallback) showVictoryCallback();
+            }, 400);
+            return;
+        }
+
         setCurrentCreature(null);
         game.inBattle = false;
         if (updateUICallback) updateUICallback();

@@ -299,6 +299,19 @@
         </div>
     </div>
 
+    <div class="gameover-popup" id="victoryPopup" style="display: none;">
+        <div class="gameover-content" style="border-color: #ffd700;">
+            <div class="gameover-title" style="color: #ffd700;">⚡ Victory! ⚡</div>
+            <div class="gameover-floor" style="color: #ffd700;">You defeated Voldemort!</div>
+            <div class="gameover-stats">
+                <div>🗡️ Creatures defeated: <span id="victoryKills">0</span></div>
+                <div>💰 Gold earned: <span id="victoryGold">0</span></div>
+                <div>🔥 Max combo: <span id="victoryCombo">0</span></div>
+            </div>
+            <button class="gameover-btn" id="victoryPlayAgainBtn" style="background: linear-gradient(to bottom, #ffd700, #cc9900);">Play Again</button>
+        </div>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>

@@ -55,6 +55,30 @@ export const BOSSES = [
     { name: 'Voldemort', icon: '\uD83D\uDC0D\uD83D\uDC80', magic: 'DARK', hp: 400, atk: 24, gold: 600, abilities: ['FEAR', 'DISARM', 'RAGE'], boss: true, spriteX: 2, spriteY: 3 }
 ];
 
+// Fixed encounter order: 3 creatures -> boss, 3 creatures -> boss, 3 creatures -> boss, 2 creatures -> boss (Voldemort)
+// Total: 11 creatures + 4 bosses = 15 encounters
+export const ENCOUNTER_ORDER = [
+    // Wave 1: Easy creatures -> Troll
+    { type: 'creature', index: 0 },  // Cornish Pixie
+    { type: 'creature', index: 1 },  // Doxy
+    { type: 'creature', index: 2 },  // Grindylow
+    { type: 'boss', index: 0 },      // Troll
+    // Wave 2: Medium creatures -> Death Eater
+    { type: 'creature', index: 3 },  // Red Cap
+    { type: 'creature', index: 4 },  // Boggart
+    { type: 'creature', index: 5 },  // Hippogriff
+    { type: 'boss', index: 1 },      // Death Eater
+    // Wave 3: Hard creatures -> Nagini
+    { type: 'creature', index: 6 },  // Acromantula
+    { type: 'creature', index: 7 },  // Dementor
+    { type: 'creature', index: 8 },  // Werewolf
+    { type: 'boss', index: 2 },      // Nagini
+    // Wave 4: Hardest creatures -> Voldemort (final boss)
+    { type: 'creature', index: 9 },  // Hungarian Horntail
+    { type: 'creature', index: 10 }, // Basilisk
+    { type: 'boss', index: 3 }       // Voldemort (final)
+];
+
 // Active spells - each house starts with their signature spell
 // Each spell has unique effect: buff (player), debuff (enemy), or special
 export const SPELLS = [
