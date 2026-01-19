@@ -121,6 +121,33 @@ This outputs a URL like: `https://some-random-words.trycloudflare.com`
 
 Your game is accessible at: `<tunnel-url>/index.html`
 
+---
+
+## Dev Link Format (for Claude Code)
+
+After making changes, provide the dev link with a version query parameter to bust browser cache:
+
+```
+<tunnel-url>/index.html?v=<version_number>
+```
+
+**Example:**
+```
+https://jewelry-surely-forge-hunt.trycloudflare.com/index.html?v=1
+https://jewelry-surely-forge-hunt.trycloudflare.com/index.html?v=2
+https://jewelry-surely-forge-hunt.trycloudflare.com/index.html?v=3
+```
+
+**Rules:**
+- Increment the version number after each code change/fix
+- Always include `?v=N` to ensure the user sees the latest changes
+- Get the current tunnel URL from: `grep -o 'https://[a-z\-]*\.trycloudflare\.com' /tmp/cloudflared.log`
+
+**Quick command to get current dev link:**
+```bash
+echo "$(grep -o 'https://[a-z\-]*\.trycloudflare\.com' /tmp/cloudflared.log)/index.html?v=1"
+```
+
 #### Step 6: Verify everything works
 
 Test the tunnel is proxying correctly:
