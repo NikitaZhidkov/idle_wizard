@@ -29,7 +29,8 @@ export function initShieldMinigame(callbacks) {
 }
 
 export function isFirstBossEver() {
-    return game.floor === 5 && game.bestFloor < 5;
+    // First boss (Troll) is at encounterIndex 3 (floor 4)
+    return game.encounterIndex === 3 && game.bestFloor < 4;
 }
 
 export function shouldTriggerShieldMinigame(creatureBuffs) {
