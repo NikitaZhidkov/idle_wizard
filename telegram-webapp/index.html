@@ -785,33 +785,23 @@
                         <div class="health-bar-container"><div class="health-bar player" id="playerHealth"></div></div>
                         <canvas id="heroCanvas" class="character-sprite" width="55" height="75"></canvas>
                     </div>
-                    <!-- Creature Card in Battle -->
-                    <div class="battle-creature-card in-battle" id="battleCreatureCard">
-                        <div class="battle-card-top">
-                            <div class="battle-creature-icon" id="battleCreatureIcon">🧚</div>
-                            <div class="battle-creature-info">
-                                <div class="battle-creature-name">
-                                    <span id="battleCreatureName">Pixie</span>
-                                    <span class="battle-creature-type" id="battleCreatureType">✨</span>
-                                </div>
-                                <div class="battle-creature-abilities" id="battleCreatureAbilities"></div>
-                            </div>
-                        </div>
-                        <div class="battle-hp-bar">
-                            <div class="battle-hp-fill" id="battleHpFill" style="width: 100%"></div>
-                        </div>
-                        <div class="battle-creature-details">
-                            <span class="battle-creature-hp" id="battleCreatureHp">❤️ 30/30</span>
-                            <span class="battle-creature-atk" id="battleCreatureAtk">⚔️ 3</span>
-                            <span class="battle-creature-weak" id="battleCreatureWeak">⚡💀</span>
-                        </div>
-                        <div class="magic-badge" id="creatureMagic"></div>
+                    <!-- Creature Display -->
+                    <div class="character" id="battleCreatureCard">
+                        <div class="character-name" id="battleCreatureName">Pixie</div>
+                        <div class="health-bar-container"><div class="health-bar enemy" id="creatureHealth"></div></div>
+                        <canvas id="creatureCanvas" class="enemy-sprite" width="50" height="60"></canvas>
+                        <!-- Hidden elements for compatibility -->
+                        <span id="battleCreatureType" style="display:none;"></span>
+                        <span id="battleCreatureAbilities" style="display:none;"></span>
+                        <span id="battleHpFill" style="display:none;"></span>
+                        <span id="battleCreatureHp" style="display:none;"></span>
+                        <span id="battleCreatureAtk" style="display:none;"></span>
+                        <span id="battleCreatureWeak" style="display:none;"></span>
+                        <span id="creatureMagic" style="display:none;"></span>
                     </div>
                 </div>
                 <!-- Hidden elements for compatibility -->
                 <div id="creatureName" style="display:none;">Pixie</div>
-                <div id="creatureHealth" style="display:none;"></div>
-                <canvas id="creatureCanvas" style="display:none;" width="50" height="60"></canvas>
                 <div class="ground" id="roomGround"></div>
                 <div class="room-transition" id="roomTransition">
                     <div class="room-victory">✨ Victory! ✨</div>
@@ -1318,7 +1308,8 @@
             activeBuffs: [],
             buffStats: { atk: 0, def: 0, hp: 0, crit: 0, critDmg: 0, goldBonus: 0, xpBonus: 0, lifesteal: 0, regenFlat: 0, dodge: 0, thorns: 0, executeDmg: 0, spellPower: 0, deathSaves: 0, doubleAttack: false },
             // Tutorials completed
-            spellTutorialDone: false
+            spellTutorialDone: false,
+            shieldTutorialDone: false
         };
 
         // Clear saved game on page load - always start fresh
@@ -1358,12 +1349,17 @@
 
         // Load creature sprite sheet
         const creatureSpriteSheet = new Image();
-        creatureSpriteSheet.src = 'creatures.png';
+        creatureSpriteSheet.crossOrigin = 'anonymous';
         let spriteSheetLoaded = false;
         creatureSpriteSheet.onload = () => {
+            console.log('Sprite sheet loaded successfully:', creatureSpriteSheet.width, 'x', creatureSpriteSheet.height);
             spriteSheetLoaded = true;
             if (currentCreature) drawCreature();
         };
+        creatureSpriteSheet.onerror = (e) => {
+            console.error('Failed to load sprite sheet:', e);
+        };
+        creatureSpriteSheet.src = 'creatures.png?v=3';
 
         // Tabs
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1636,69 +1632,25 @@
             const card = document.getElementById('battleCreatureCard');
             card.style.display = 'flex';
 
+            // Draw creature sprite on canvas
+            drawCreature();
+
+            // Name (short version for display)
             const isBoss = currentCreature.boss;
-            card.className = `battle-creature-card in-battle ${isBoss ? 'boss' : ''}`;
-
-            // Icon
-            document.getElementById('battleCreatureIcon').textContent = currentCreature.icon;
-
-            // Name with boss crown
             const nameEl = document.getElementById('battleCreatureName');
-            nameEl.innerHTML = isBoss
-                ? `<span class="boss-crown">👑</span> ${currentCreature.name}`
-                : currentCreature.name;
-
-            // Magic type icon
-            const magic = MAGIC_TYPES[currentCreature.magic];
-            const typeEl = document.getElementById('battleCreatureType');
-            typeEl.textContent = magic.icon;
-            typeEl.title = magic.name;
-
-            // Stats
-            document.getElementById('battleCreatureHp').textContent = `❤️ ${creatureHp}/${currentCreature.maxHp}`;
-            document.getElementById('battleCreatureAtk').textContent = `⚔️ ${currentCreature.atk}`;
-
-            // Weakness
-            const weakTo = MAGIC_TYPES[magic.weakTo];
-            const weakEl = document.getElementById('battleCreatureWeak');
-            if (weakTo) {
-                weakEl.textContent = `⚡${weakTo.icon}`;
-                weakEl.title = `Weak to ${weakTo.name}`;
-                weakEl.style.display = 'inline';
-            } else {
-                weakEl.style.display = 'none';
-            }
-
-            // Abilities
-            const abilitiesEl = document.getElementById('battleCreatureAbilities');
-            abilitiesEl.innerHTML = '';
-            currentCreature.abilities.forEach(ab => {
-                const ability = ABILITIES[ab];
-                if (ability) {
-                    const span = document.createElement('span');
-                    span.className = 'battle-creature-ability';
-                    span.textContent = ability.icon;
-                    span.title = `${ability.name}: ${ability.desc}`;
-                    abilitiesEl.appendChild(span);
-                }
-            });
+            const shortName = currentCreature.name.split(' ').pop(); // Last word of name
+            nameEl.textContent = isBoss ? `👑 ${shortName}` : shortName;
 
             // HP bar
             const hpPercent = (creatureHp / currentCreature.maxHp) * 100;
-            const hpFill = document.getElementById('battleHpFill');
-            hpFill.style.width = `${Math.max(0, hpPercent)}%`;
-            hpFill.className = `battle-hp-fill ${isBoss ? 'boss' : ''} ${hpPercent < 30 ? 'low' : ''}`;
+            document.getElementById('creatureHealth').style.width = `${Math.max(0, hpPercent)}%`;
         }
 
         function updateBattleCreatureHp() {
             if (!currentCreature) return;
 
-            document.getElementById('battleCreatureHp').textContent = `❤️ ${Math.max(0, creatureHp)}/${currentCreature.maxHp}`;
-
             const hpPercent = (creatureHp / currentCreature.maxHp) * 100;
-            const hpFill = document.getElementById('battleHpFill');
-            hpFill.style.width = `${Math.max(0, hpPercent)}%`;
-            hpFill.className = `battle-hp-fill ${currentCreature.boss ? 'boss' : ''} ${hpPercent < 30 ? 'low' : ''}`;
+            document.getElementById('creatureHealth').style.width = `${Math.max(0, hpPercent)}%`;
         }
 
         function generateRoom() {
@@ -2111,15 +2063,8 @@
             renderCreatureStatus();
             renderBattleCreatureCard();
 
-            // Start shield minigame immediately for boss fights
-            if (isBoss) {
-                setTimeout(() => {
-                    if (currentCreature && currentCreature.boss) {
-                        creatureBuffs.shieldPhase1 = true;
-                        startShieldMinigame();
-                    }
-                }, 1000); // Brief delay to show boss announcement first
-            }
+            // Shield minigame for bosses is triggered from battle() via shouldTriggerShieldMinigame()
+            // This ensures proper timing and avoids race conditions
         }
 
         function castSpell(spell) {
@@ -2624,6 +2569,7 @@
 
                 game.floor++;
                 currentCreature = null;
+                game.inBattle = false; // Stop battle loop during transition
                 updateUI();
                 saveGame();
 
@@ -2768,22 +2714,49 @@
                 const magic = MAGIC_TYPES[creature.magic];
                 const weakTo = MAGIC_TYPES[magic.weakTo];
 
-                div.innerHTML = `
-                    <div class="creature-icon">${discovered ? creature.icon : '❓'}</div>
-                    <div class="creature-info">
-                        <div class="creature-title">
-                            ${discovered ? creature.name : '???'}
-                            ${discovered ? magic.icon : ''}
-                            ${creature.boss ? '👑' : ''}
-                        </div>
-                        ${discovered ? `
-                            <div class="creature-stats">HP: ${creature.hp} | ATK: ${creature.atk}</div>
-                            <div class="creature-weakness">Weak to: ${weakTo ? weakTo.icon + ' ' + weakTo.name : 'None'}</div>
-                            ${creature.abilities.length ? `<div class="creature-ability">Traits: ${creature.abilities.map(a => ABILITIES[a]?.icon || a).join(' ')}</div>` : ''}
-                        ` : '<div class="creature-stats">Defeat to discover</div>'}
+                // Create icon container
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'creature-icon';
+
+                if (discovered && spriteSheetLoaded && creature.spriteX !== undefined) {
+                    // Use canvas sprite for discovered creatures
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 40;
+                    canvas.height = 48;
+                    canvas.style.width = '40px';
+                    canvas.style.height = '48px';
+                    const ctx = canvas.getContext('2d');
+
+                    const srcX = creature.spriteX * SPRITE_CELL + SPRITE_BORDER;
+                    const srcY = creature.spriteY * SPRITE_CELL + SPRITE_BORDER;
+                    ctx.drawImage(
+                        creatureSpriteSheet,
+                        srcX, srcY, SPRITE_SIZE, SPRITE_SIZE,
+                        0, 0, 40, 48
+                    );
+                    iconDiv.appendChild(canvas);
+                } else {
+                    iconDiv.textContent = discovered ? creature.icon : '❓';
+                }
+
+                // Create info container
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'creature-info';
+                infoDiv.innerHTML = `
+                    <div class="creature-title">
+                        ${discovered ? creature.name : '???'}
+                        ${discovered ? magic.icon : ''}
+                        ${creature.boss ? '👑' : ''}
                     </div>
+                    ${discovered ? `
+                        <div class="creature-stats">HP: ${creature.hp} | ATK: ${creature.atk}</div>
+                        <div class="creature-weakness">Weak to: ${weakTo ? weakTo.icon + ' ' + weakTo.name : 'None'}</div>
+                        ${creature.abilities.length ? `<div class="creature-ability">Traits: ${creature.abilities.map(a => ABILITIES[a]?.icon || a).join(' ')}</div>` : ''}
+                    ` : '<div class="creature-stats">Defeat to discover</div>'}
                 `;
 
+                div.appendChild(iconDiv);
+                div.appendChild(infoDiv);
                 container.appendChild(div);
             });
         }
@@ -2831,13 +2804,18 @@
         }
 
         function restartGame() {
-            // Reset run stats but keep soul gems and best floor
+            // Full reset - same as page reload
             game.gold = 0;
+            game.gems = 0;
             game.level = 1;
             game.floor = 1;
             game.exp = 0;
             game.expToLevel = 100;
             game.currentHp = 100;
+            game.bestFloor = 0;
+            game.totalKills = 0;
+            game.totalGoldEarned = 0;
+            game.discoveredCreatures = [];
             game.equipment = { wand: null, robe: null, amulet: null, book: null, relic: null };
             game.owned = [];
             game.skillPoints = 0;
@@ -2854,6 +2832,9 @@
             game.house = null;
             game.gameStarted = false;
             game.inBattle = false;
+            game.selectingBuff = false;
+            game.roomSeed = 0;
+            game.lastGoldGain = 0;
             // Reset combat buffs/debuffs
             game.combatBuffs = [];
             game.combatDebuffs = [];
@@ -2863,14 +2844,44 @@
             game.activeBuffs = [];
             game.buffStats = { atk: 0, def: 0, hp: 0, crit: 0, critDmg: 0, goldBonus: 0, xpBonus: 0, lifesteal: 0, regenFlat: 0, dodge: 0, thorns: 0, executeDmg: 0, spellPower: 0, deathSaves: 0, doubleAttack: false };
 
+            // Reset tutorials - start fresh like page reload
+            game.spellTutorialDone = false;
+            game.shieldTutorialDone = false;
+
             // Reset global combat state
             currentCreature = null;
             creatureHp = 0;
             creatureBuffs = {};
             turnCount = 0;
 
+            // Reset shield minigame state
+            shieldGame = {
+                active: false,
+                currentColor: null,
+                timeLeft: 0,
+                timerInterval: null,
+                isTutorial: false,
+                bossSpellQueue: [],
+                spellsBlocked: 0,
+                spellsMissed: 0,
+                tutorialShown: false
+            };
+
+            // Hide all popups and overlays
             document.getElementById('gameoverPopup').style.display = 'none';
+            document.getElementById('buffSelectionPanel').style.display = 'none';
+            document.getElementById('shieldMinigame').classList.remove('active');
+            document.getElementById('shieldTutorialOverlay').style.display = 'none';
+            document.getElementById('spellTutorialOverlay').style.display = 'none';
+            document.getElementById('roomTransition').classList.remove('active');
+
+            // Clear any running timers
+            if (shieldGame.timerInterval) {
+                clearInterval(shieldGame.timerInterval);
+            }
+
             renderActiveBuffs();
+            updateUI();
 
             // Show house selection again
             showHouseSelection();
@@ -3046,14 +3057,18 @@
         }
 
         function startShieldMinigame() {
-            const isTutorial = isFirstBossEver();
+            // Only show tutorial on the FIRST shield phase of the first boss ever
+            // Use game.shieldTutorialDone to track if we've shown it (persists across phases)
+            const isFirstPhase = !creatureBuffs.shieldPhase2; // Phase 1 if phase 2 hasn't triggered yet
+            const shouldShowTutorial = isFirstBossEver() && isFirstPhase && !game.shieldTutorialDone;
+
             shieldGame = {
                 active: true,
                 currentColor: null,
                 timeLeft: 0,
                 timerInterval: null,
-                isTutorial: isTutorial,
-                bossSpellQueue: generateBossSpells(isTutorial ? 3 : 5),
+                isTutorial: shouldShowTutorial,
+                bossSpellQueue: generateBossSpells(shouldShowTutorial ? 3 : 5),
                 spellsBlocked: 0,
                 spellsMissed: 0,
                 tutorialShown: false
@@ -3065,7 +3080,7 @@
             }
 
             // For tutorial, show the explanation overlay first
-            if (isTutorial && !shieldGame.tutorialShown) {
+            if (shouldShowTutorial && !shieldGame.tutorialShown) {
                 showTutorialOverlay();
                 return;
             }
@@ -3080,6 +3095,7 @@
             document.getElementById('shieldTutorialStartBtn').onclick = () => {
                 document.getElementById('shieldTutorialOverlay').style.display = 'none';
                 shieldGame.tutorialShown = true;
+                game.shieldTutorialDone = true; // Mark tutorial as done permanently
                 beginShieldMinigame();
             };
         }
@@ -3303,7 +3319,8 @@
             // Check if player died
             if (game.currentHp <= 0) {
                 endShieldMinigame();
-                // Death will be handled by battle loop
+                // Handle death directly since battle loop won't run
+                gameOver();
                 return;
             }
 
@@ -3342,6 +3359,11 @@
             // Resume normal battle
             if (game.currentHp > 0 && creatureHp > 0) {
                 addLog('⚔️ Resume battle!', 'log-boss');
+                // Ensure battle state is correct for resuming
+                game.gameStarted = true;
+                game.inBattle = true;
+                // Always restart the battle interval to be safe
+                startBattle();
             }
         }
 
