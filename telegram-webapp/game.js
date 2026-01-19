@@ -66,6 +66,14 @@ export function setShieldGame(value) { shieldGame = value; }
 export function setBattleInterval(value) { battleInterval = value; }
 export function setSpellTutorialPage(value) { spellTutorialPage = value; }
 
+// Getters for safe access (ensures we read current value, not stale closure reference)
+export function isShieldGameActive() { return shieldGame.active; }
+export function getBattleInterval() { return battleInterval; }
+export function getShieldGame() { return shieldGame; }
+export function getCreatureBuffs() { return creatureBuffs; }
+export function getCurrentCreature() { return currentCreature; }
+export function getCreatureHp() { return creatureHp; }
+
 // ============ UTILITY FUNCTIONS ============
 
 export function playSound(freq, type = 'sine', duration = 0.1) {

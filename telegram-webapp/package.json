@@ -14,13 +14,26 @@
     "test:boss": "npx playwright test -g 'Boss and Shield'",
     "test:restart": "npx playwright test -g 'Game Over and Restart'",
     "test:flow": "npx playwright test -g 'Full Game Flow'",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:ui": "vitest --ui",
+    "test:unit:coverage": "vitest run --coverage",
+    "test:all": "npm run test:unit && npm run test",
     "serve": "python3 -m http.server 8080"
   },
-  "keywords": ["telegram", "game", "wizard"],
+  "keywords": [
+    "telegram",
+    "game",
+    "wizard"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.57.0",
+    "@vitest/ui": "^4.0.17",
+    "happy-dom": "^20.3.3",
+    "jsdom": "^27.4.0",
+    "vitest": "^4.0.17"
   }
 }
