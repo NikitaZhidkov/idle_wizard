@@ -1160,27 +1160,35 @@
             { id: 'avadakedavra', name: 'Avada Kedavra', icon: '💀', cooldown: 90, magic: 'DARK', damage: 0, desc: 'Killing curse: Instant kill, costs 50% of your HP (90s cooldown)', locked: true, color: '#00ff00', visual: 'death', special: 'avadaKedavra' }
         ];
 
-        // Magical creatures
+        // Sprite sheet: 500x500, 4x4 grid, ~4px borders
+        // Each cell is 125x125, sprite area starts at 4px offset, ~117x117 usable
+        const SPRITE_CELL = 125;
+        const SPRITE_BORDER = 4;
+        const SPRITE_SIZE = 117;
+
+        // Magical creatures (balanced for smooth first-run progression)
+        // Sprite positions: row 0-2 for creatures, row 3 for bosses
         const CREATURES = [
-            { name: 'Cornish Pixie', icon: '🧚', magic: 'CREATURES', hp: 30, atk: 3, gold: 5, abilities: [] },
-            { name: 'Doxy', icon: '🪰', magic: 'CREATURES', hp: 35, atk: 5, gold: 8, abilities: ['POISON'] },
-            { name: 'Grindylow', icon: '🐙', magic: 'CREATURES', hp: 50, atk: 6, gold: 12, abilities: [] },
-            { name: 'Red Cap', icon: '👹', magic: 'DARK', hp: 60, atk: 8, gold: 15, abilities: ['RAGE'] },
-            { name: 'Boggart', icon: '👻', magic: 'DARK', hp: 70, atk: 7, gold: 18, abilities: ['FEAR'] },
-            { name: 'Hippogriff', icon: '🦅', magic: 'CREATURES', hp: 100, atk: 12, gold: 30, abilities: ['DODGE'] },
-            { name: 'Acromantula', icon: '🕷️', magic: 'CREATURES', hp: 120, atk: 15, gold: 40, abilities: ['POISON', 'RAGE'] },
-            { name: 'Dementor', icon: '👤', magic: 'DARK', hp: 150, atk: 18, gold: 60, abilities: ['FEAR', 'REGEN'] },
-            { name: 'Werewolf', icon: '🐺', magic: 'CREATURES', hp: 180, atk: 22, gold: 80, abilities: ['RAGE', 'REGEN'] },
-            { name: 'Hungarian Horntail', icon: '🐉', magic: 'CREATURES', hp: 250, atk: 25, gold: 120, abilities: ['SHIELD', 'RAGE'] },
-            { name: 'Basilisk', icon: '🐍', magic: 'DARK', hp: 300, atk: 30, gold: 150, abilities: ['POISON', 'FEAR', 'REFLECT'] }
+            { name: 'Cornish Pixie', icon: '🧚', magic: 'CREATURES', hp: 25, atk: 2, gold: 5, abilities: [], spriteX: 0, spriteY: 0 },
+            { name: 'Doxy', icon: '🪰', magic: 'CREATURES', hp: 30, atk: 3, gold: 8, abilities: ['POISON'], spriteX: 1, spriteY: 0 },
+            { name: 'Grindylow', icon: '🐙', magic: 'CREATURES', hp: 40, atk: 4, gold: 12, abilities: [], spriteX: 2, spriteY: 0 },
+            { name: 'Red Cap', icon: '👹', magic: 'DARK', hp: 50, atk: 5, gold: 15, abilities: ['RAGE'], spriteX: 3, spriteY: 0 },
+            { name: 'Boggart', icon: '👻', magic: 'DARK', hp: 55, atk: 5, gold: 18, abilities: ['FEAR'], spriteX: 0, spriteY: 1 },
+            { name: 'Hippogriff', icon: '🦅', magic: 'CREATURES', hp: 70, atk: 7, gold: 30, abilities: ['DODGE'], spriteX: 1, spriteY: 1 },
+            { name: 'Acromantula', icon: '🕷️', magic: 'CREATURES', hp: 85, atk: 9, gold: 40, abilities: ['POISON', 'RAGE'], spriteX: 2, spriteY: 1 },
+            { name: 'Dementor', icon: '👤', magic: 'DARK', hp: 100, atk: 11, gold: 60, abilities: ['FEAR', 'REGEN'], spriteX: 3, spriteY: 1 },
+            { name: 'Werewolf', icon: '🐺', magic: 'CREATURES', hp: 120, atk: 13, gold: 80, abilities: ['RAGE', 'REGEN'], spriteX: 0, spriteY: 2 },
+            { name: 'Hungarian Horntail', icon: '🐉', magic: 'CREATURES', hp: 150, atk: 16, gold: 120, abilities: ['SHIELD', 'RAGE'], spriteX: 1, spriteY: 2 },
+            { name: 'Basilisk', icon: '🐍', magic: 'DARK', hp: 180, atk: 18, gold: 150, abilities: ['POISON', 'FEAR', 'REFLECT'], spriteX: 2, spriteY: 2 }
         ];
 
-        // Boss creatures
+        // Boss creatures (balanced for first-run winnable experience)
+        // Row 3: Troll, Death Eater, Nagini, Voldemort
         const BOSSES = [
-            { name: 'Troll', icon: '🧌', magic: 'CREATURES', hp: 400, atk: 20, gold: 200, abilities: ['RAGE', 'SHIELD'], boss: true },
-            { name: 'Death Eater', icon: '💀', magic: 'DARK', hp: 500, atk: 28, gold: 300, abilities: ['DARK', 'DISARM', 'SHIELD'], boss: true },
-            { name: 'Nagini', icon: '🐍', magic: 'DARK', hp: 600, atk: 32, gold: 400, abilities: ['POISON', 'REGEN', 'DODGE'], boss: true },
-            { name: 'Voldemort', icon: '🐍💀', magic: 'DARK', hp: 800, atk: 40, gold: 600, abilities: ['FEAR', 'REFLECT', 'DISARM', 'RAGE'], boss: true }
+            { name: 'Troll', icon: '🧌', magic: 'CREATURES', hp: 180, atk: 12, gold: 200, abilities: ['RAGE', 'SHIELD'], boss: true, spriteX: 3, spriteY: 2 },
+            { name: 'Death Eater', icon: '💀', magic: 'DARK', hp: 220, atk: 15, gold: 300, abilities: ['DARK', 'DISARM', 'SHIELD'], boss: true, spriteX: 0, spriteY: 3 },
+            { name: 'Nagini', icon: '🐍', magic: 'DARK', hp: 280, atk: 18, gold: 400, abilities: ['POISON', 'REGEN', 'DODGE'], boss: true, spriteX: 1, spriteY: 3 },
+            { name: 'Voldemort', icon: '🐍💀', magic: 'DARK', hp: 400, atk: 24, gold: 600, abilities: ['FEAR', 'REFLECT', 'DISARM', 'RAGE'], boss: true, spriteX: 2, spriteY: 3 }
         ];
 
         // Shop items (some are house-exclusive)
@@ -1313,8 +1321,8 @@
             spellTutorialDone: false
         };
 
-        const saved = localStorage.getItem('wizardDuels');
-        if (saved) game = { ...game, ...JSON.parse(saved) };
+        // Clear saved game on page load - always start fresh
+        localStorage.removeItem('wizardDuels');
 
         let currentCreature = null;
         let creatureHp = 0;
@@ -1347,6 +1355,15 @@
         const creatureCanvas = document.getElementById('creatureCanvas');
         const heroCtx = heroCanvas.getContext('2d');
         const creatureCtx = creatureCanvas.getContext('2d');
+
+        // Load creature sprite sheet
+        const creatureSpriteSheet = new Image();
+        creatureSpriteSheet.src = 'creatures.png';
+        let spriteSheetLoaded = false;
+        creatureSpriteSheet.onload = () => {
+            spriteSheetLoaded = true;
+            if (currentCreature) drawCreature();
+        };
 
         // Tabs
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1927,75 +1944,15 @@
             spawnCreature();
         }
 
+        // Load hero image
+        const heroImage = new Image();
+        heroImage.src = 'hero.png';
+
         function drawWizard() {
             heroCtx.clearRect(0, 0, 55, 75);
-            const stats = getStats();
-
-            // House colors
-            const houseColors = {
-                gryffindor: '#740001',
-                slytherin: '#1a472a',
-                ravenclaw: '#0e1a40',
-                hufflepuff: '#ecb939'
-            };
-            const robeColor = houseColors[game.house];
-
-            // Head
-            heroCtx.fillStyle = '#deb887';
-            heroCtx.beginPath();
-            heroCtx.arc(27, 16, 10, 0, Math.PI * 2);
-            heroCtx.fill();
-
-            // Wizard hat
-            heroCtx.fillStyle = '#1a1a2e';
-            heroCtx.beginPath();
-            heroCtx.moveTo(15, 18);
-            heroCtx.lineTo(27, -5);
-            heroCtx.lineTo(39, 18);
-            heroCtx.closePath();
-            heroCtx.fill();
-            heroCtx.fillRect(10, 16, 34, 5);
-
-            // Robe
-            heroCtx.fillStyle = robeColor;
-            heroCtx.fillRect(17, 26, 22, 30);
-            heroCtx.fillStyle = 'rgba(255,255,255,0.2)';
-            heroCtx.fillRect(26, 28, 2, 26);
-
-            // Wand with magic glow
-            const wandMagic = stats.wandMagic;
-            if (wandMagic !== 'NONE') {
-                heroCtx.fillStyle = MAGIC_TYPES[wandMagic].color;
-                heroCtx.globalAlpha = 0.6;
-                heroCtx.beginPath();
-                heroCtx.arc(48, 35, 6, 0, Math.PI * 2);
-                heroCtx.fill();
-                heroCtx.globalAlpha = 1;
+            if (heroImage.complete) {
+                heroCtx.drawImage(heroImage, 0, 0, 55, 75);
             }
-            heroCtx.fillStyle = '#8b4513';
-            heroCtx.fillRect(42, 30, 12, 3);
-
-            // Legs
-            heroCtx.fillStyle = '#2a2a3a';
-            heroCtx.fillRect(20, 56, 6, 12);
-            heroCtx.fillRect(30, 56, 6, 12);
-
-            // Face
-            heroCtx.fillStyle = '#333';
-            heroCtx.fillRect(23, 14, 3, 3);
-            heroCtx.fillRect(30, 14, 3, 3);
-
-            // Glasses
-            heroCtx.strokeStyle = '#333';
-            heroCtx.lineWidth = 1;
-            heroCtx.beginPath();
-            heroCtx.arc(24, 15, 4, 0, Math.PI * 2);
-            heroCtx.arc(32, 15, 4, 0, Math.PI * 2);
-            heroCtx.stroke();
-            heroCtx.beginPath();
-            heroCtx.moveTo(28, 15);
-            heroCtx.lineTo(28, 15);
-            heroCtx.stroke();
         }
 
         function drawCreature() {
@@ -2003,63 +1960,68 @@
             creatureCtx.clearRect(0, 0, 50, 60);
 
             const magic = MAGIC_TYPES[currentCreature.magic];
-            creatureCtx.fillStyle = magic.color;
 
-            // Different shapes based on creature
-            if (currentCreature.icon.includes('🧚') || currentCreature.icon.includes('🪰')) {
-                // Small flying creature
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(25, 40, 10, 8, 0, 0, Math.PI * 2);
-                creatureCtx.fill();
-                // Wings
-                creatureCtx.fillStyle = 'rgba(255,255,255,0.5)';
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(15, 35, 8, 4, -0.5, 0, Math.PI * 2);
-                creatureCtx.ellipse(35, 35, 8, 4, 0.5, 0, Math.PI * 2);
-                creatureCtx.fill();
-            } else if (currentCreature.icon.includes('🐉') || currentCreature.icon.includes('🐍')) {
-                // Dragon/snake
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(25, 38, 18, 14, 0, 0, Math.PI * 2);
-                creatureCtx.fill();
-                // Head
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(38, 25, 10, 8, 0.3, 0, Math.PI * 2);
-                creatureCtx.fill();
-                // Eyes
-                creatureCtx.fillStyle = '#ff0';
-                creatureCtx.fillRect(40, 22, 4, 4);
-            } else if (currentCreature.icon.includes('👻') || currentCreature.icon.includes('👤')) {
-                // Ghost/dementor
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(25, 30, 15, 20, 0, 0, Math.PI * 2);
-                creatureCtx.fill();
-                // Wavy bottom
-                creatureCtx.beginPath();
-                creatureCtx.moveTo(10, 45);
-                creatureCtx.quadraticCurveTo(17, 55, 25, 45);
-                creatureCtx.quadraticCurveTo(33, 55, 40, 45);
-                creatureCtx.fill();
-            } else if (currentCreature.boss) {
-                // Boss - larger
-                creatureCtx.beginPath();
-                creatureCtx.ellipse(25, 32, 20, 18, 0, 0, Math.PI * 2);
-                creatureCtx.fill();
-                // Crown/indicator
-                creatureCtx.fillStyle = '#ffd700';
-                creatureCtx.fillRect(15, 8, 20, 6);
+            // Use sprite sheet if loaded and creature has sprite coordinates
+            if (spriteSheetLoaded && currentCreature.spriteX !== undefined) {
+                const srcX = currentCreature.spriteX * SPRITE_CELL + SPRITE_BORDER;
+                const srcY = currentCreature.spriteY * SPRITE_CELL + SPRITE_BORDER;
+                // Flip horizontally to face left (toward player)
+                creatureCtx.save();
+                creatureCtx.scale(-1, 1);
+                creatureCtx.drawImage(
+                    creatureSpriteSheet,
+                    srcX, srcY, SPRITE_SIZE, SPRITE_SIZE,  // Source rectangle
+                    -50, 0, 50, 60                          // Negative X for flip
+                );
+                creatureCtx.restore();
             } else {
-                // Generic creature
-                creatureCtx.fillRect(12, 22, 26, 26);
-                creatureCtx.beginPath();
-                creatureCtx.arc(25, 15, 12, 0, Math.PI * 2);
-                creatureCtx.fill();
-            }
+                // Fallback to procedural drawing if sprite not available
+                creatureCtx.fillStyle = magic.color;
 
-            // Eyes
-            creatureCtx.fillStyle = currentCreature.magic === 'DARK' ? '#ff0000' : '#fff';
-            creatureCtx.fillRect(18, 12, 5, 5);
-            creatureCtx.fillRect(28, 12, 5, 5);
+                if (currentCreature.icon.includes('🧚') || currentCreature.icon.includes('🪰')) {
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(25, 40, 10, 8, 0, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                    creatureCtx.fillStyle = 'rgba(255,255,255,0.5)';
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(15, 35, 8, 4, -0.5, 0, Math.PI * 2);
+                    creatureCtx.ellipse(35, 35, 8, 4, 0.5, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                } else if (currentCreature.icon.includes('🐉') || currentCreature.icon.includes('🐍')) {
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(25, 38, 18, 14, 0, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(38, 25, 10, 8, 0.3, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                    creatureCtx.fillStyle = '#ff0';
+                    creatureCtx.fillRect(40, 22, 4, 4);
+                } else if (currentCreature.icon.includes('👻') || currentCreature.icon.includes('👤')) {
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(25, 30, 15, 20, 0, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                    creatureCtx.beginPath();
+                    creatureCtx.moveTo(10, 45);
+                    creatureCtx.quadraticCurveTo(17, 55, 25, 45);
+                    creatureCtx.quadraticCurveTo(33, 55, 40, 45);
+                    creatureCtx.fill();
+                } else if (currentCreature.boss) {
+                    creatureCtx.beginPath();
+                    creatureCtx.ellipse(25, 32, 20, 18, 0, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                    creatureCtx.fillStyle = '#ffd700';
+                    creatureCtx.fillRect(15, 8, 20, 6);
+                } else {
+                    creatureCtx.fillRect(12, 22, 26, 26);
+                    creatureCtx.beginPath();
+                    creatureCtx.arc(25, 15, 12, 0, Math.PI * 2);
+                    creatureCtx.fill();
+                }
+
+                creatureCtx.fillStyle = currentCreature.magic === 'DARK' ? '#ff0000' : '#fff';
+                creatureCtx.fillRect(18, 12, 5, 5);
+                creatureCtx.fillRect(28, 12, 5, 5);
+            }
 
             document.getElementById('creatureMagic').textContent = magic.icon;
         }
@@ -2077,21 +2039,21 @@
             const dodgeMultiplier = 1 - (stats.dodge / 100);
             const regenPerTurn = stats.regenFlat + (hasSkill('regen') ? stats.hp * 0.03 : 0);
 
-            // Target: player should win ~95% of the time
-            // This means enemy should deal ~60-80% of player HP before dying
-            // and player should kill enemy in reasonable turns (5-10 turns)
+            // Target: player should win consistently on first run
+            // Enemy deals 30-50% of player HP before dying (reduced from 50-80%)
+            // Player kills enemy in 5-8 turns
 
-            const targetTurnsToKill = 6 + Math.random() * 4; // 6-10 turns to kill enemy
-            const targetDamageToPlayer = stats.hp * (0.5 + Math.random() * 0.3); // Enemy deals 50-80% of player HP
+            const targetTurnsToKill = 5 + Math.random() * 3; // 5-8 turns to kill enemy
+            const targetDamageToPlayer = stats.hp * (0.3 + Math.random() * 0.2); // Enemy deals 30-50% of player HP
 
             // Calculate enemy HP based on player DPS
-            const enemyHP = Math.floor(playerDPS * targetTurnsToKill * (0.85 + Math.random() * 0.3));
+            const enemyHP = Math.floor(playerDPS * targetTurnsToKill * (0.8 + Math.random() * 0.2));
 
             // Calculate enemy ATK: should deal targetDamageToPlayer over targetTurnsToKill turns
-            // Accounting for player defense and dodge
+            // Accounting for player defense and dodge (reduced ATK scaling)
             const rawDamageNeeded = targetDamageToPlayer / targetTurnsToKill;
             const damageBeforeDefense = rawDamageNeeded / dodgeMultiplier;
-            const enemyATK = Math.floor(damageBeforeDefense + effectiveDefense * 0.5);
+            const enemyATK = Math.floor(damageBeforeDefense + effectiveDefense * 0.3);
 
             // Gold scales with difficulty
             const difficultyFactor = (enemyHP + enemyATK * 10) / 100;
@@ -2121,19 +2083,20 @@
             // Calculate balanced stats based on player power
             const balanced = calculateBalancedEnemy();
 
-            // Boss multiplier
-            const bossMultiplier = isBoss ? 2.5 : 1;
+            // Boss multiplier (reduced for fair first-run experience)
+            const bossHpMultiplier = isBoss ? 1.8 : 1;
+            const bossAtkMultiplier = isBoss ? 1.4 : 1;
 
-            // Minimum stats from template (so early game isn't too easy)
-            const minHP = template.hp * (1 + game.floor * 0.05);
-            const minATK = template.atk * (1 + game.floor * 0.03);
+            // Minimum stats from template (reduced scaling for fair progression)
+            const minHP = template.hp * (1 + game.floor * 0.02);
+            const minATK = template.atk * (1 + game.floor * 0.015);
 
             currentCreature = {
                 ...template,
-                hp: Math.floor(Math.max(minHP, balanced.hp) * bossMultiplier),
-                maxHp: Math.floor(Math.max(minHP, balanced.hp) * bossMultiplier),
-                atk: Math.floor(Math.max(minATK, balanced.atk) * bossMultiplier),
-                gold: Math.floor(Math.max(template.gold, balanced.gold) * bossMultiplier)
+                hp: Math.floor(Math.max(minHP, balanced.hp) * bossHpMultiplier),
+                maxHp: Math.floor(Math.max(minHP, balanced.hp) * bossHpMultiplier),
+                atk: Math.floor(Math.max(minATK, balanced.atk) * bossAtkMultiplier),
+                gold: Math.floor(Math.max(template.gold, balanced.gold) * bossHpMultiplier)
             };
             creatureHp = currentCreature.hp;
 
