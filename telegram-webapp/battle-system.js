@@ -95,6 +95,7 @@ export function spawnCreature() {
     setTurnCount(0);
     setCreatureBuffs({});
     game.fearDebuff = false;
+    game.poisonStacks = 0;
 
     const isBoss = game.floor % 5 === 0;
     let template;
@@ -318,6 +319,11 @@ export function battle() {
 
     setTurnCount(turnCount + 1);
     const stats = getStats();
+
+    // Debug logging for Voldemort
+    if (currentCreature.name === 'Voldemort') {
+        console.log(`[VOLDEMORT] Turn ${turnCount}, Player HP: ${game.currentHp}, Boss HP: ${getCreatureHp()}, Enraged: ${getCreatureBuffs().enraged}, Poison: ${game.poisonStacks}`);
+    }
     const creatureBuffs = getCreatureBuffs();
 
     const isCrit = Math.random() * 100 < stats.crit;

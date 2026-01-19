@@ -58,6 +58,11 @@ import { initShieldMinigame } from './shield-minigame.js';
 window.nextSpellTutorialPage = nextSpellTutorialPage;
 window.finishSpellTutorial = finishSpellTutorial;
 
+// Export game state for testing
+window.game = game;
+window.getCurrentCreature = getCurrentCreature;
+window.getCreatureHp = getCreatureHp;
+
 // ============ GLOBAL DOM REFERENCES ============
 let battleArea, battleLog, heroCanvas, creatureCanvas, heroCtx, creatureCtx;
 let heroImage, creatureSpriteSheet;
