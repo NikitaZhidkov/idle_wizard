@@ -11,7 +11,8 @@ import {
     getSkillEffect,
     getStats,
     getMagicMultiplier,
-    saveGame
+    saveGame,
+    isShieldGameActive
 } from './game.js';
 
 import {
@@ -38,12 +39,16 @@ export function renderSpellBar(onSpellClick) {
     if (!container) return;
     container.innerHTML = '';
 
+    const shieldActive = isShieldGameActive();
+
     SPELLS.forEach(spell => {
         if (!game.unlockedSpells.includes(spell.id)) return;
 
         const cd = game.spellCooldowns[spell.id] || 0;
         const div = document.createElement('div');
-        div.className = `spell ${cd <= 0 ? 'ready' : 'on-cooldown'}`;
+        // Block spells during shield minigame
+        const isBlocked = shieldActive;
+        div.className = `spell ${cd <= 0 && !isBlocked ? 'ready' : 'on-cooldown'}${isBlocked ? ' blocked' : ''}`;
         div.innerHTML = `
             ${spell.icon}
             <span class="spell-cooldown">${cd > 0 ? cd + 's' : ''}</span>
@@ -56,6 +61,9 @@ export function renderSpellBar(onSpellClick) {
 }
 
 export function castSpell(spell) {
+    // Block spell casting during shield minigame
+    if (isShieldGameActive()) return;
+
     const currentCreature = getCurrentCreature();
     if (!currentCreature || (game.spellCooldowns[spell.id] || 0) > 0) return;
 

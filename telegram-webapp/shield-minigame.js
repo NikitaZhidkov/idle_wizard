@@ -133,6 +133,9 @@ export function beginShieldMinigame() {
     if (addLogCallback) addLogCallback('🛡️ Boss casting spells! Block them!', 'log-boss');
     playSound(400, 'sine', 0.2);
 
+    // Update UI to block spells during minigame
+    if (updateUICallback) updateUICallback();
+
     document.querySelectorAll('.shield-btn').forEach(btn => {
         btn.onclick = () => handleShieldPress(btn.dataset.color);
     });
