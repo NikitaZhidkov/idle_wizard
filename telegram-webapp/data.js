@@ -52,7 +52,7 @@ export const BOSSES = [
     { name: 'Troll', icon: '\uD83E\uDDCC', magic: 'CREATURES', hp: 180, atk: 12, gold: 200, abilities: ['RAGE', 'SHIELD'], boss: true, spriteX: 3, spriteY: 2 },
     { name: 'Death Eater', icon: '\uD83D\uDC80', magic: 'DARK', hp: 220, atk: 15, gold: 300, abilities: ['DARK', 'DISARM', 'SHIELD'], boss: true, spriteX: 0, spriteY: 3 },
     { name: 'Nagini', icon: '\uD83D\uDC0D', magic: 'DARK', hp: 280, atk: 18, gold: 400, abilities: ['POISON', 'REGEN', 'DODGE'], boss: true, spriteX: 1, spriteY: 3 },
-    { name: 'Voldemort', icon: '\uD83D\uDC0D\uD83D\uDC80', magic: 'DARK', hp: 400, atk: 24, gold: 600, abilities: ['FEAR', 'REFLECT', 'DISARM', 'RAGE'], boss: true, spriteX: 2, spriteY: 3 }
+    { name: 'Voldemort', icon: '\uD83D\uDC0D\uD83D\uDC80', magic: 'DARK', hp: 400, atk: 24, gold: 600, abilities: ['FEAR', 'DISARM', 'RAGE'], boss: true, spriteX: 2, spriteY: 3 }
 ];
 
 // Active spells - each house starts with their signature spell

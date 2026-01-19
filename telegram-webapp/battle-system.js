@@ -240,6 +240,7 @@ export function processCreatureAbilities() {
         const dmg = Math.floor(game.maxHp * 0.02 * game.poisonStacks);
         game.currentHp -= dmg;
         showFloat(`-${dmg} ☠️`, 60, 50);
+        addLog(`☠️ Poison (${game.poisonStacks}x): -${dmg} HP`, 'log-damage');
     }
 
     if (renderCreatureStatusCallback) renderCreatureStatusCallback();
@@ -434,10 +435,12 @@ export function battle() {
                     const reflectDmg = Math.floor(damage * 0.2);
                     game.currentHp -= reflectDmg;
                     showFloat(`-${reflectDmg}`, 100, 50);
+                    addLog(`💫 Reflect: -${reflectDmg} HP`, 'log-damage');
                 }
 
                 game.currentHp -= creatureDmg;
                 showFloat(`-${creatureDmg}`, 60, 60);
+                addLog(`⚔️ ${currentCreature.name} hits: -${creatureDmg} HP`, 'log-damage');
             }
         }
 
@@ -474,6 +477,7 @@ export function startBattle() {
     const currentInterval = getBattleInterval();
     if (currentInterval) {
         clearInterval(currentInterval);
+        console.log('[BATTLE] Cleared previous battle interval');
     }
     const newInterval = setInterval(() => {
         const shieldActive = isShieldGameActive();
@@ -482,6 +486,7 @@ export function startBattle() {
         }
     }, 900);
     setBattleInterval(newInterval);
+    console.log('[BATTLE] Started new battle interval');
 }
 
 export function generateRoom() {
