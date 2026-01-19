@@ -1,0 +1,24 @@
+# Environment files
+.env
+.env.local
+*.env
+
+# Bot tokens and secrets
+bot_token.txt
+secrets.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
