@@ -1,5 +1,5 @@
-// Main entry point - imports and initializes all modules
-// This orchestrates the modular game components
+// Main entry point - Single canvas game with unified renderer
+// All UI is rendered on canvas, no DOM elements for game display
 
 import {
     SPRITE_SIZE, SPRITE_CELL, SPRITE_BORDER,
@@ -24,21 +24,21 @@ import {
     formatNum,
     saveGame,
     getStats,
-    calculateOffline
+    calculateOffline,
+    isShieldGameActive
 } from './game.js';
 
-import { initVisualEffects, showFloat, createParticles } from './visual-effects.js';
-
 import {
-    initUIRenderers,
-    updateSpriteSheetStatus,
-    renderShop,
-    renderSkillTree,
-    renderBestiary,
-    renderSpellbook,
-    renderActiveBuffs,
-    renderBuffChoices
-} from './ui-renderers.js';
+    initCanvasRenderer,
+    updateGameState,
+    addLogEntry,
+    clearBattleLog,
+    showFloatingText,
+    createParticles,
+    setCallbacks,
+    getCanvas,
+    getGameState
+} from './canvas-renderer.js?v=7';
 
 import {
     initBattleSystem,
@@ -50,70 +50,69 @@ import {
     generateRoom
 } from './battle-system.js';
 
-import { initSpellSystem, renderSpellBar, castSpell } from './spell-system.js';
+import { initSpellSystem, castSpell } from './spell-system.js';
 
 import { initShieldMinigame } from './shield-minigame.js';
 
-// Make functions available globally for onclick handlers in HTML
-window.nextSpellTutorialPage = nextSpellTutorialPage;
-window.finishSpellTutorial = finishSpellTutorial;
-
 // Export game state for testing
 window.game = game;
+// Use getter to always get current shieldGame reference
+Object.defineProperty(window.game, 'shieldGame', {
+    get: function() { return shieldGame; }
+});
 window.getCurrentCreature = getCurrentCreature;
 window.getCreatureHp = getCreatureHp;
 
-// ============ GLOBAL DOM REFERENCES ============
-let battleArea, battleLog, heroCanvas, creatureCanvas, heroCtx, creatureCtx;
-let heroImage, creatureSpriteSheet;
-let spriteSheetLoaded = false;
+// Creature sprite mapping
+const CREATURE_SPRITES = {
+    'Pixie': 0, 'Doxy': 1, 'Grindylow': 2, 'Red Cap': 3, 'Boggart': 4,
+    'Hippogriff': 5, 'Acromantula': 6, 'Dementor': 7, 'Werewolf': 8, 'Hungarian Horntail': 9,
+    'Basilisk': 10, 'Mountain Troll': 11, 'Death Eater': 12, 'Nagini': 13, 'Voldemort': 14
+};
+
+// House icons
+const HOUSE_ICONS = {
+    gryffindor: '🦁',
+    slytherin: '🐍',
+    ravenclaw: '🦅',
+    hufflepuff: '🦡'
+};
 
 // ============ UI FUNCTIONS ============
 
 function initUI() {
-    battleArea = document.getElementById('battleArea');
-    battleLog = document.getElementById('battleLog');
-    heroCanvas = document.getElementById('heroCanvas');
-    creatureCanvas = document.getElementById('creatureCanvas');
-    heroCtx = heroCanvas.getContext('2d');
-    creatureCtx = creatureCanvas.getContext('2d');
+    const gameContainer = document.querySelector('.game-container');
 
-    // Initialize visual effects with battleArea
-    initVisualEffects(battleArea);
+    // Initialize canvas renderer - this creates the single game canvas
+    initCanvasRenderer(gameContainer);
 
-    // Load hero image
-    heroImage = new Image();
-    heroImage.src = 'hero.png';
-
-    // Load creature sprite sheet
-    creatureSpriteSheet = new Image();
-    creatureSpriteSheet.crossOrigin = 'anonymous';
-    creatureSpriteSheet.onload = () => {
-        console.log('Sprite sheet loaded:', creatureSpriteSheet.width, 'x', creatureSpriteSheet.height);
-        spriteSheetLoaded = true;
-        initUIRenderers(creatureSpriteSheet, true);
-        updateSpriteSheetStatus(true);
-        const currentCreature = getCurrentCreature();
-        if (currentCreature) drawCreature();
-    };
-    creatureSpriteSheet.onerror = (e) => console.error('Failed to load sprite sheet:', e);
-    creatureSpriteSheet.src = 'creatures.png?v=3';
-
-    // Initialize UI renderers
-    initUIRenderers(creatureSpriteSheet, spriteSheetLoaded);
+    // Set up all callbacks for user interactions
+    setCallbacks({
+        onTabClick: handleTabClick,
+        onSpellClick: handleSpellClick,
+        onHouseSelect: selectHouse,
+        onBuffSelect: selectBuff,
+        onRetryClick: restartGame,
+        onVictoryClick: restartGame,
+        onShieldButtonClick: handleShieldPress,
+        onTutorialNext: handleTutorialNext,
+        onTutorialFinish: finishSpellTutorial,
+        onShieldTutorialStart: startShieldFromTutorial,
+        onRoomContinue: continueToNextRoom
+    });
 
     // Initialize battle system with callbacks
     initBattleSystem({
-        battleLog,
-        heroCanvas,
-        creatureCanvas,
+        battleLog: null, // No longer using DOM
+        heroCanvas: null,
+        creatureCanvas: null,
         updateUI,
         gameOver,
         showRoomTransition,
         showVictory,
-        drawCreature,
-        renderCreatureStatus,
-        renderBattleCreatureCard
+        drawCreature: updateUI, // Just update UI, canvas handles drawing
+        renderCreatureStatus: updateUI,
+        renderBattleCreatureCard: updateUI
     });
 
     // Initialize spell system with callbacks
@@ -128,8 +127,27 @@ function initUI() {
         updateUI,
         addLog,
         gameOver,
+        beginMinigame: beginShieldMinigame,
         startBattle
     });
+}
+
+function handleTabClick(tabId) {
+    // Canvas handles tab rendering, just update state
+    updateGameState({ activeTab: tabId });
+}
+
+function handleSpellClick(spellData) {
+    // Find the original spell and cast it
+    const spell = SPELLS.find(s => s.id === spellData.id);
+    if (spell) {
+        castSpell(spell);
+    }
+}
+
+function handleTutorialNext(page) {
+    updateGameState({ spellTutorialPage: page });
+    playSound(500, 'sine', 0.1);
 }
 
 function updateUI() {
@@ -137,75 +155,97 @@ function updateUI() {
     game.maxHp = stats.hp;
     if (game.currentHp > stats.hp) game.currentHp = stats.hp;
 
-    document.getElementById('gold').textContent = `${formatNum(game.gold)} Galleons`;
-    document.getElementById('gems').textContent = `${game.gems} Sickles | ${game.skillPoints} XP`;
-    document.getElementById('level').textContent = `Year ${game.level}`;
-    document.getElementById('floor').textContent = `Floor: ${game.floor}`;
-    document.getElementById('availableSP').textContent = game.skillPoints;
-
-    document.getElementById('atkStat').textContent = stats.atk;
-    document.getElementById('defStat').textContent = stats.def;
-    document.getElementById('critStat').textContent = stats.crit + '%';
-    document.getElementById('hpStat').textContent = stats.hp;
-
-    document.getElementById('playerHealth').style.width = `${(game.currentHp / stats.hp) * 100}%`;
-
-    const comboEl = document.getElementById('comboDisplay');
-    comboEl.textContent = game.combo > 1 ? `${game.combo}x Combo!` : '';
-
-    document.getElementById('floorDisplay').textContent = game.floor % 5 === 0 ? '⚠️ BOSS!' : '';
-
-    renderSpellBar(castSpell);
-    renderCreatureStatus();
-}
-
-function renderCreatureStatus() {
-    const container = document.getElementById('creatureStatus');
-    if (!container) return;
-    container.innerHTML = '';
-
     const currentCreature = getCurrentCreature();
-    if (!currentCreature) return;
+    const creatureHp = getCreatureHp();
 
-    currentCreature.abilities.forEach(ab => {
-        const ability = ABILITIES[ab];
-        if (ability) {
-            const div = document.createElement('div');
-            div.className = 'status-icon';
-            div.textContent = ability.icon;
-            div.title = ability.name;
-            container.appendChild(div);
-        }
+    // Build spells array for rendering
+    const shieldActive = isShieldGameActive();
+    const spells = SPELLS
+        .filter(spell => game.unlockedSpells.includes(spell.id))
+        .map(spell => {
+            const cd = game.spellCooldowns[spell.id] || 0;
+            return {
+                id: spell.id,
+                icon: spell.icon,
+                magicIcon: MAGIC_TYPES[spell.magic].icon,
+                cooldown: cd,
+                isReady: cd <= 0 && !shieldActive,
+                isBlocked: shieldActive
+            };
+        });
+
+    // Build active buffs array
+    const buffCounts = {};
+    game.activeBuffs.forEach(b => {
+        if (!buffCounts[b.id]) buffCounts[b.id] = { ...b, count: 0 };
+        buffCounts[b.id].count++;
     });
+    const activeBuffs = Object.values(buffCounts).map(buff => ({
+        icon: buff.icon,
+        name: buff.name,
+        count: buff.count
+    }));
 
-    const creatureBuffs = game.creatureBuffs || {};
-    if (creatureBuffs.shield) {
-        const div = document.createElement('div');
-        div.className = 'status-icon';
-        div.textContent = '🛡️';
-        container.appendChild(div);
+    // Build creature abilities
+    let creatureAbilities = [];
+    let creatureHasShield = false;
+    if (currentCreature) {
+        creatureAbilities = currentCreature.abilities
+            .map(ab => ABILITIES[ab])
+            .filter(ability => ability)
+            .map(ability => ({ icon: ability.icon, name: ability.name }));
+
+        const creatureBuffs = game.creatureBuffs || {};
+        creatureHasShield = !!creatureBuffs.shield;
     }
-}
 
-function renderBattleCreatureCard() {
-    const currentCreature = getCurrentCreature();
-    if (!currentCreature) {
-        document.getElementById('battleCreatureCard').style.display = 'none';
-        return;
+    // Get creature sprite index
+    let creatureType = 0;
+    if (currentCreature) {
+        creatureType = CREATURE_SPRITES[currentCreature.name] || 0;
     }
 
-    const card = document.getElementById('battleCreatureCard');
-    card.style.display = 'flex';
+    // Update all game state at once
+    updateGameState({
+        // Header
+        gold: game.gold,
+        gems: game.gems,
+        skillPoints: game.skillPoints,
+        level: game.level,
+        floor: game.floor,
 
-    drawCreature();
+        // Battle area
+        floorDisplay: game.floor % 5 === 0 && currentCreature?.boss ? '⚠️ BOSS!' : '',
+        comboDisplay: game.combo > 1 ? `${game.combo}x Combo!` : '',
+        isBoss: currentCreature?.boss || false,
 
-    const isBoss = currentCreature.boss;
-    const nameEl = document.getElementById('battleCreatureName');
-    const shortName = currentCreature.name.split(' ').pop();
-    nameEl.textContent = isBoss ? `👑 ${shortName}` : shortName;
+        // Hero
+        heroHp: game.currentHp,
+        heroMaxHp: stats.hp,
+        heroName: 'Wizard',
+        houseIcon: game.house ? HOUSE_ICONS[game.house] : '🧙',
 
-    const hpPercent = (getCreatureHp() / currentCreature.maxHp) * 100;
-    document.getElementById('creatureHealth').style.width = `${Math.max(0, hpPercent)}%`;
+        // Creature
+        creatureName: currentCreature?.name || '',
+        creatureHp: creatureHp,
+        creatureMaxHp: currentCreature?.maxHp || 100,
+        creatureType: creatureType,
+        creatureAbilities: creatureAbilities,
+        creatureHasShield: creatureHasShield,
+
+        // Buffs
+        activeBuffs: activeBuffs,
+
+        // Spells
+        spells: spells,
+        shieldMinigameActive: shieldActive,
+
+        // Stats
+        atk: stats.atk,
+        def: stats.def,
+        crit: stats.crit,
+        hp: stats.hp
+    });
 }
 
 function showRoomTransition(goldGain) {
@@ -213,19 +253,41 @@ function showRoomTransition(goldGain) {
     game.lastGoldGain = goldGain;
     game.selectingBuff = true;
 
-    const transition = document.getElementById('roomTransition');
-    document.getElementById('roomLoot').textContent = `+${formatNum(goldGain)} Galleons`;
-    document.getElementById('roomNext').textContent = `Room ${game.floor} awaits...`;
+    // Generate buff choices
+    const buffChoices = generateBuffChoices();
 
-    transition.classList.add('active');
-
-    document.getElementById('buffSelectionPanel').style.display = 'block';
-    renderBuffChoices(selectBuff);
+    updateGameState({
+        showRoomTransition: false, // Don't show room transition, go straight to buff select
+        showBuffSelect: true,
+        buffChoices: buffChoices,
+        roomTransitionData: {
+            loot: goldGain,
+            nextRoom: game.floor
+        }
+    });
 
     playSound(600, 'sine', 0.15);
 }
 
-function selectBuff(buff) {
+function generateBuffChoices() {
+    // Simplified buff choices - in real game this would be more complex
+    const allBuffs = [
+        { id: 'atk', name: '+5 Attack', icon: '⚔️', desc: 'Increases attack damage', effect: { atk: 5 } },
+        { id: 'def', name: '+3 Defense', icon: '🛡️', desc: 'Reduces damage taken', effect: { def: 3 } },
+        { id: 'hp', name: '+20 HP', icon: '❤️', desc: 'Increases max health', effect: { hp: 20 } },
+        { id: 'crit', name: '+3% Crit', icon: '⚡', desc: 'Critical hit chance', effect: { crit: 3 } },
+        { id: 'heal', name: 'Heal 30%', icon: '💚', desc: 'Restore health', effect: { healNow: Math.floor(game.maxHp * 0.3) } },
+        { id: 'gold', name: '+50 Gold', icon: '💰', desc: 'Instant gold', effect: { goldNow: 50 } },
+        { id: 'lifesteal', name: 'Lifesteal', icon: '🧛', desc: 'Heal on hit', effect: { lifesteal: 0.05 } },
+        { id: 'dodge', name: '+5% Dodge', icon: '💨', desc: 'Chance to avoid damage', effect: { dodge: 5 } }
+    ];
+
+    // Pick 3 random buffs
+    const shuffled = allBuffs.sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+}
+
+function selectBuff(buff, index) {
     game.activeBuffs.push({ id: buff.id, name: buff.name, icon: buff.icon });
 
     const effect = buff.effect;
@@ -266,7 +328,6 @@ function selectBuff(buff) {
             game.unlockedSpells.push(effect.unlockSpell);
             const spell = SPELLS.find(s => s.id === effect.unlockSpell);
             addLog(`Learned ${spell ? spell.name : effect.unlockSpell}!`, 'log-spell');
-            renderSpellBar(castSpell);
         }
     }
 
@@ -279,18 +340,19 @@ function selectBuff(buff) {
     playSound(800, 'sine', 0.2);
     addLog(`Gained: ${buff.name}!`, 'log-levelup');
 
-    renderActiveBuffs();
     updateUI();
     saveGame();
 
+    // Hide buff selection and continue
+    updateGameState({ showBuffSelect: false });
     continueToNextRoom();
 }
 
 function continueToNextRoom() {
-    const transition = document.getElementById('roomTransition');
-    transition.classList.remove('active');
-
-    document.getElementById('buffSelectionPanel').style.display = 'none';
+    updateGameState({
+        showRoomTransition: false,
+        showBuffSelect: false
+    });
 
     game.selectingBuff = false;
 
@@ -304,56 +366,23 @@ function continueToNextRoom() {
     if (!currentInterval) {
         startBattle();
     }
-}
 
-function drawWizard() {
-    heroCtx.clearRect(0, 0, 55, 75);
-    if (heroImage && heroImage.complete) {
-        heroCtx.drawImage(heroImage, 0, 0, 55, 75);
-    }
-}
-
-function drawCreature() {
-    const currentCreature = getCurrentCreature();
-    if (!currentCreature) return;
-    creatureCtx.clearRect(0, 0, 50, 60);
-
-    const magic = MAGIC_TYPES[currentCreature.magic];
-
-    if (spriteSheetLoaded && currentCreature.spriteX !== undefined) {
-        const srcX = currentCreature.spriteX * SPRITE_CELL + SPRITE_BORDER;
-        const srcY = currentCreature.spriteY * SPRITE_CELL + SPRITE_BORDER;
-        creatureCtx.save();
-        creatureCtx.scale(-1, 1);
-        creatureCtx.drawImage(
-            creatureSpriteSheet,
-            srcX, srcY, SPRITE_SIZE, SPRITE_SIZE,
-            -50, 0, 50, 60
-        );
-        creatureCtx.restore();
-    } else {
-        creatureCtx.fillStyle = magic.color;
-        creatureCtx.fillRect(12, 22, 26, 26);
-        creatureCtx.beginPath();
-        creatureCtx.arc(25, 15, 12, 0, Math.PI * 2);
-        creatureCtx.fill();
-        creatureCtx.fillStyle = currentCreature.magic === 'DARK' ? '#ff0000' : '#fff';
-        creatureCtx.fillRect(18, 12, 5, 5);
-        creatureCtx.fillRect(28, 12, 5, 5);
-    }
-
-    document.getElementById('creatureMagic').textContent = magic.icon;
+    updateUI();
 }
 
 function gameOver() {
     game.gameStarted = false;
     if (game.floor > game.bestFloor) game.bestFloor = game.floor;
 
-    document.getElementById('gameoverFloor').textContent = `Reached Floor ${game.floor}`;
-    document.getElementById('gameoverKills').textContent = game.runKills;
-    document.getElementById('gameoverGold').textContent = formatNum(game.runGold);
-    document.getElementById('gameoverCombo').textContent = game.maxCombo;
-    document.getElementById('gameoverPopup').style.display = 'flex';
+    updateGameState({
+        showGameOver: true,
+        gameOverData: {
+            floor: game.floor,
+            kills: game.runKills,
+            gold: game.runGold,
+            combo: game.maxCombo
+        }
+    });
 
     playSound(150, 'sawtooth', 0.3);
     saveGame();
@@ -363,10 +392,14 @@ function showVictory() {
     game.gameStarted = false;
     if (game.floor > game.bestFloor) game.bestFloor = game.floor;
 
-    document.getElementById('victoryKills').textContent = game.runKills;
-    document.getElementById('victoryGold').textContent = formatNum(game.runGold);
-    document.getElementById('victoryCombo').textContent = game.maxCombo;
-    document.getElementById('victoryPopup').style.display = 'flex';
+    updateGameState({
+        showVictory: true,
+        victoryData: {
+            kills: game.runKills,
+            gold: game.runGold,
+            combo: game.maxCombo
+        }
+    });
 
     // Victory sound - triumphant tone
     playSound(800, 'sine', 0.3);
@@ -388,7 +421,7 @@ function restartGame() {
         clearInterval(shieldGame.timerInterval);
     }
 
-    // Reset all game state - equivalent to a fresh page load
+    // Reset all game state
     game.gold = 0;
     game.gems = 0;
     game.level = 1;
@@ -426,7 +459,6 @@ function restartGame() {
     game.unlockedSpells = [];
     game.activeBuffs = [];
     game.buffStats = { atk: 0, def: 0, hp: 0, crit: 0, critDmg: 0, goldBonus: 0, xpBonus: 0, lifesteal: 0, regenFlat: 0, dodge: 0, thorns: 0, executeDmg: 0, spellPower: 0, deathSaves: 0, doubleAttack: false };
-    // Reset tutorial flags so tutorials show again on new game
     game.spellTutorialDone = false;
     game.shieldTutorialDone = false;
 
@@ -436,7 +468,7 @@ function restartGame() {
     setCreatureBuffs({});
     setTurnCount(0);
 
-    // Reset shield minigame state completely
+    // Reset shield minigame state
     setShieldGame({
         active: false,
         currentColor: null,
@@ -449,50 +481,30 @@ function restartGame() {
         tutorialShown: false
     });
 
-    // Hide all popups and overlays
-    document.getElementById('gameoverPopup').style.display = 'none';
-    document.getElementById('victoryPopup').style.display = 'none';
-    document.getElementById('buffSelectionPanel').style.display = 'none';
-    document.getElementById('shieldMinigame').classList.remove('active');
-    document.getElementById('shieldTutorialOverlay').style.display = 'none';
-    document.getElementById('spellTutorialOverlay').style.display = 'none';
-    document.getElementById('roomTransition').classList.remove('active');
+    // Hide all popups
+    updateGameState({
+        showGameOver: false,
+        showVictory: false,
+        showBuffSelect: false,
+        showShieldMinigame: false,
+        showShieldTutorial: false,
+        showSpellTutorial: false,
+        showRoomTransition: false
+    });
 
     // Clear battle log
-    if (battleLog) {
-        battleLog.innerHTML = '';
-    }
+    clearBattleLog();
 
-    renderActiveBuffs();
     updateUI();
 
-    // Clear saved game so it starts fresh
+    // Clear saved game
     localStorage.removeItem('wizardDuels');
 
     showHouseSelection();
 }
 
 function showHouseSelection() {
-    document.getElementById('houseSelectPopup').style.display = 'flex';
-}
-
-function updateHouseDisplay() {
-    const houseIcons = {
-        gryffindor: '🦁',
-        slytherin: '🐍',
-        ravenclaw: '🦅',
-        hufflepuff: '🦡'
-    };
-    const houseNames = {
-        gryffindor: 'Gryffindor',
-        slytherin: 'Slytherin',
-        ravenclaw: 'Ravenclaw',
-        hufflepuff: 'Hufflepuff'
-    };
-    if (game.house) {
-        document.getElementById('currentHouseIcon').textContent = houseIcons[game.house];
-        document.getElementById('currentHouseName').textContent = houseNames[game.house];
-    }
+    updateGameState({ showHouseSelect: true });
 }
 
 function selectHouse(house) {
@@ -522,21 +534,14 @@ function selectHouse(house) {
     };
     game.unlockedSpells = [spellMap[house]];
 
-    updateHouseDisplay();
-
-    document.getElementById('houseSelectPopup').style.display = 'none';
+    // Hide house selection
+    updateGameState({ showHouseSelect: false });
 
     const stats = getStats();
     game.currentHp = stats.hp;
     game.maxHp = stats.hp;
 
     generateRoom();
-    drawWizard();
-    renderShop();
-    renderSkillTree(addLog);
-    renderBestiary();
-    renderActiveBuffs();
-    renderSpellBar(castSpell);
     updateUI();
     spawnCreature();
     saveGame();
@@ -552,47 +557,22 @@ function selectHouse(house) {
     }
 }
 
-function showOffline(rewards) {
-    document.getElementById('offlineGold').textContent = `+${formatNum(rewards.gold)} Galleons`;
-    document.getElementById('offlinePopup').style.display = 'flex';
-    document.getElementById('offlineClaimBtn').onclick = () => {
-        game.gold += rewards.gold;
-        game.totalGoldEarned += rewards.gold;
-        document.getElementById('offlinePopup').style.display = 'none';
-        updateUI();
-        saveGame();
-    };
-}
-
 // ============ SPELL TUTORIAL ============
 
 function showSpellTutorial() {
     if (game.spellTutorialDone) return;
 
     setSpellTutorialPage(1);
-    updateSpellTutorialPages();
-    document.getElementById('spellTutorialOverlay').style.display = 'flex';
+    updateGameState({
+        showSpellTutorial: true,
+        spellTutorialPage: 1
+    });
     playSound(600, 'sine', 0.2);
-}
-
-function nextSpellTutorialPage() {
-    setSpellTutorialPage(spellTutorialPage + 1);
-    updateSpellTutorialPages();
-    playSound(500, 'sine', 0.1);
-}
-
-function updateSpellTutorialPages() {
-    for (let i = 1; i <= 3; i++) {
-        const page = document.getElementById(`spellTutorialPage${i}`);
-        if (page) {
-            page.classList.toggle('active', i === spellTutorialPage);
-        }
-    }
 }
 
 function finishSpellTutorial() {
     game.spellTutorialDone = true;
-    document.getElementById('spellTutorialOverlay').style.display = 'none';
+    updateGameState({ showSpellTutorial: false });
     playSound(800, 'sine', 0.2);
     saveGame();
 
@@ -600,6 +580,165 @@ function finishSpellTutorial() {
     game.inBattle = true;
     startBattle();
     addLog('Your adventure begins!', 'log-levelup');
+}
+
+// ============ SHIELD MINIGAME ============
+
+function handleShieldPress(color) {
+    // This is called from canvas click - forward to the minigame module
+    if (!shieldGame.active || !shieldGame.currentColor) return;
+
+    clearInterval(shieldGame.timerInterval);
+
+    if (color === shieldGame.currentColor) {
+        shieldSuccess();
+    } else {
+        shieldMiss();
+    }
+}
+
+function shieldSuccess() {
+    shieldGame.spellsBlocked++;
+
+    updateGameState({
+        shieldResult: '✓ Blocked!',
+        shieldSpells: []
+    });
+
+    playSound(800, 'sine', 0.15);
+    addLog('🛡️ Spell blocked!', 'log-effective');
+
+    const pauseTime = shieldGame.isTutorial ? 1200 : 600;
+    setTimeout(() => {
+        if (shieldGame.active) sendNextBossSpell();
+    }, pauseTime);
+}
+
+function shieldMiss() {
+    shieldGame.spellsMissed++;
+
+    updateGameState({
+        shieldResult: '✗ Hit!'
+    });
+
+    const currentCreature = getCurrentCreature();
+    const stats = getStats();
+    const damageMultiplier = shieldGame.isTutorial ? 0.3 : 0.5;
+    const damage = Math.floor(currentCreature.atk * damageMultiplier);
+    game.currentHp -= damage;
+
+    showFloatingText(`-${damage}`, 60, 200, 'damage');
+    addLog(`💥 Hit by spell! -${damage} HP`, 'log-damage');
+    playSound(200, 'sawtooth', 0.2);
+
+    updateUI();
+
+    if (game.currentHp <= 0) {
+        endShieldMinigame();
+        gameOver();
+        return;
+    }
+
+    setTimeout(() => {
+        if (shieldGame.active) sendNextBossSpell();
+    }, 600);
+}
+
+function startShieldFromTutorial() {
+    shieldGame.tutorialShown = true;
+    game.shieldTutorialDone = true;
+    updateGameState({ showShieldTutorial: false });
+    beginShieldMinigame();
+}
+
+function beginShieldMinigame() {
+    updateGameState({
+        showShieldMinigame: true,
+        shieldTimer: 100,
+        shieldResult: '',
+        shieldHighlightColor: null
+    });
+
+    addLog('🛡️ Boss casting spells! Block them!', 'log-boss');
+    playSound(400, 'sine', 0.2);
+    updateUI();
+
+    setTimeout(() => {
+        if (shieldGame.active) sendNextBossSpell();
+    }, shieldGame.isTutorial ? 1000 : 500);
+}
+
+function sendNextBossSpell() {
+    if (shieldGame.bossSpellQueue.length === 0) {
+        endShieldMinigame();
+        return;
+    }
+
+    const color = shieldGame.bossSpellQueue.shift();
+    shieldGame.currentColor = color;
+
+    const baseTime = shieldGame.isTutorial ? 4000 : 1500;
+    const speedBonus = shieldGame.isTutorial ? 0 : Math.min((game.floor / 5 - 1) * 100, 600);
+    shieldGame.timeLeft = baseTime - speedBonus;
+
+    // Update canvas state with flying spell
+    updateGameState({
+        shieldSpells: [{ color, x: 200, y: 100, flying: true }],
+        shieldHighlightColor: shieldGame.isTutorial ? color : null,
+        shieldTimer: 100,
+        shieldResult: ''
+    });
+
+    // Start timer
+    const maxTime = shieldGame.timeLeft;
+    shieldGame.timerInterval = setInterval(() => {
+        shieldGame.timeLeft -= 100;
+        const percent = (shieldGame.timeLeft / maxTime) * 100;
+        updateGameState({ shieldTimer: percent });
+
+        if (shieldGame.timeLeft <= 0) {
+            clearInterval(shieldGame.timerInterval);
+            shieldMiss();
+        }
+    }, 100);
+
+    playSound(600 + (color === 'red' ? 0 : color === 'blue' ? 100 : color === 'yellow' ? 200 : 300), 'sine', 0.15);
+}
+
+function endShieldMinigame() {
+    const currentCreature = getCurrentCreature();
+    shieldGame.active = false;
+    shieldGame.currentColor = null;
+    clearInterval(shieldGame.timerInterval);
+
+    updateGameState({
+        showShieldMinigame: false,
+        shieldHighlightColor: null
+    });
+
+    const blocked = shieldGame.spellsBlocked;
+    const total = blocked + shieldGame.spellsMissed;
+
+    if (blocked === total && total > 0) {
+        addLog(`🎉 Perfect defense! All ${total} spells blocked!`, 'log-effective');
+        const bonusDmg = Math.floor(currentCreature.maxHp * 0.1);
+        setCreatureHp(getCreatureHp() - bonusDmg);
+        showFloatingText(`PERFECT! -${bonusDmg}`, 220, 150, 'effective');
+        playSound(1000, 'sine', 0.2);
+    } else if (blocked > 0) {
+        addLog(`🛡️ Blocked ${blocked}/${total} spells`, 'log-spell');
+    } else {
+        addLog(`💥 Failed to block any spells!`, 'log-damage');
+    }
+
+    updateUI();
+
+    if (game.currentHp > 0 && getCreatureHp() > 0) {
+        addLog('⚔️ Resume battle!', 'log-boss');
+        game.gameStarted = true;
+        game.inBattle = true;
+        startBattle();
+    }
 }
 
 // ============ INITIALIZATION ============
@@ -610,48 +749,21 @@ function init() {
 
     initUI();
 
-    // Setup tabs
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-
-            if (tab.dataset.tab === 'spellbook') renderSpellbook();
-            if (tab.dataset.tab === 'skills') renderSkillTree(addLog);
-            if (tab.dataset.tab === 'shop') renderShop();
-            if (tab.dataset.tab === 'bestiary') renderBestiary();
-        });
-    });
-
-    // House selection
-    document.querySelectorAll('.house-option').forEach(opt => {
-        opt.addEventListener('click', () => selectHouse(opt.dataset.house));
-    });
-
-    // Game over retry button
-    document.getElementById('gameoverRetryBtn').addEventListener('click', restartGame);
-
-    // Victory play again button
-    document.getElementById('victoryPlayAgainBtn').addEventListener('click', restartGame);
-
     // Start game
     if (!game.houseChosen || !game.gameStarted) {
         showHouseSelection();
     } else {
         const offline = calculateOffline();
-        if (offline) showOffline(offline);
+        if (offline) {
+            // For canvas-only, we'd show offline popup on canvas
+            // For now, just add the gold
+            game.gold += offline.gold;
+            game.totalGoldEarned += offline.gold;
+        }
 
         game.inBattle = true;
-        updateHouseDisplay();
         generateRoom();
         updateUI();
-        renderShop();
-        renderSkillTree(addLog);
-        renderBestiary();
-        renderActiveBuffs();
-        drawWizard();
         spawnCreature();
         startBattle();
     }
@@ -662,7 +774,7 @@ function init() {
         for (const id in game.spellCooldowns) {
             if (game.spellCooldowns[id] > 0) game.spellCooldowns[id]--;
         }
-        renderSpellBar(castSpell);
+        updateUI();
     }, 1000);
 
     setInterval(saveGame, 10000);
