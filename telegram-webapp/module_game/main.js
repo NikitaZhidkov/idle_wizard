@@ -26,16 +26,16 @@ import {
     stopCooldownTick,
     on,
     emit
-} from './systems.js';
+} from './systems/index.js';
 
 import {
     initRenderer,
     render,
     getClickTarget,
     getCanvas
-} from './render.js';
+} from './render/index.js';
 
-import { HOUSE_DATA, SPELL_TEMPLATES } from './entities.js';
+import { HOUSE_DATA, SPELL_TEMPLATES } from './entities/index.js';
 
 // ============ AUDIO ============
 
