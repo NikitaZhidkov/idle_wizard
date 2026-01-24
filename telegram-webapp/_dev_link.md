@@ -1,8 +1,9 @@
-# Dev Link (Cloudflare Tunnel)
+# Dev Link (localhost.run)
 
 ## Prerequisites
 
-- Cloudflared installed (`brew install cloudflared`)
+- SSH client (built-in on macOS/Linux)
+- Node.js with npx
 
 ## Quick Start
 
@@ -10,15 +11,14 @@
 # From telegram-webapp directory:
 cd /Users/nikita/Programming/placeholder_default_project/telegram-webapp
 
-# 1. Start local server on port 8080
-python3 -m http.server 8080 &
+# 1. Start local server on port 8080 (using Node http-server for stability)
+npx http-server -p 8080 -a 127.0.0.1 > /tmp/httpserver.log 2>&1 &
 
-# 2. Start Cloudflare tunnel
-pkill -f cloudflared 2>/dev/null; sleep 1
-nohup cloudflared tunnel --url http://localhost:8080 > /tmp/cloudflared.log 2>&1 &
+# 2. Start localhost.run tunnel
+ssh -o StrictHostKeyChecking=no -R 80:127.0.0.1:8080 nokey@localhost.run > /tmp/localhost_run.log 2>&1 &
 
-# 3. Get the tunnel URL (wait 6 seconds for tunnel to establish)
-sleep 6 && grep -o 'https://[a-z0-9\-]*\.trycloudflare\.com' /tmp/cloudflared.log | head -1
+# 3. Get the tunnel URL (wait 5 seconds for tunnel to establish)
+sleep 5 && grep -o 'https://[a-z0-9]*\.lhr\.life' /tmp/localhost_run.log | head -1
 ```
 
 ## Step-by-Step
@@ -27,66 +27,80 @@ sleep 6 && grep -o 'https://[a-z0-9\-]*\.trycloudflare\.com' /tmp/cloudflared.lo
 
 ```bash
 cd /Users/nikita/Programming/placeholder_default_project/telegram-webapp
-python3 -m http.server 8080 &
+npx http-server -p 8080 -a 127.0.0.1 > /tmp/httpserver.log 2>&1 &
 ```
 
-Or use npm:
-```bash
-npm run serve
-```
+**Important:** Use Node.js `http-server` instead of Python's `http.server` - it's more stable and doesn't have IPv6 binding issues.
 
-Server runs on `http://localhost:8080`
+Server runs on `http://127.0.0.1:8080`
 
 ### 2. Kill Any Existing Tunnel
 
 ```bash
-pkill -f cloudflared
+pkill -f "ssh.*localhost.run"
 ```
 
-### 3. Start Cloudflare Tunnel
+### 3. Start localhost.run Tunnel
 
 ```bash
-nohup cloudflared tunnel --url http://localhost:8080 > /tmp/cloudflared.log 2>&1 &
+ssh -o StrictHostKeyChecking=no -R 80:127.0.0.1:8080 nokey@localhost.run > /tmp/localhost_run.log 2>&1 &
 ```
 
 ### 4. Get the Public URL
 
 ```bash
-sleep 6 && grep -o 'https://[a-z0-9\-]*\.trycloudflare\.com' /tmp/cloudflared.log | head -1
+sleep 5 && grep -o 'https://[a-z0-9]*\.lhr\.life' /tmp/localhost_run.log | head -1
 ```
 
-Outputs a URL like: `https://tremendous-constitutional-supposed-hygiene.trycloudflare.com`
+Outputs a URL like: `https://73dbe37cc9066d.lhr.life`
 
 ### 5. Verify It Works
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" "$(grep -o 'https://[a-z0-9\-]*\.trycloudflare\.com' /tmp/cloudflared.log | head -1)"
+curl -sL "$(grep -o 'https://[a-z0-9]*\.lhr\.life' /tmp/localhost_run.log | head -1)" | head -5
 ```
 
-Should return `200`
+Should return HTML content.
 
-## Important Notes
+## Cache Busting
 
-- The tunnel URL changes every time you restart cloudflared
-- Local server must be running BEFORE the tunnel can work
-- Use `?v=N` query parameter to bust browser cache after changes
+**Important:** When providing a new link to the user, always append a version query parameter to ensure the latest code is loaded:
+
+```
+https://73dbe37cc9066d.lhr.life?v=1
+https://73dbe37cc9066d.lhr.life?v=2
+https://73dbe37cc9066d.lhr.life?v=3
+```
+
+Increment the version number each time you provide a new link after code changes.
 
 ## Check Status
 
 ```bash
 # Check if server is running
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080
+curl -s http://127.0.0.1:8080/ | head -3
 
 # Check if tunnel is running
-pgrep -f cloudflared && echo "Tunnel running" || echo "Tunnel NOT running"
+pgrep -f "ssh.*localhost.run" && echo "Tunnel running" || echo "Tunnel NOT running"
 
 # Get current URL
-grep -o 'https://[a-z0-9\-]*\.trycloudflare\.com' /tmp/cloudflared.log | head -1
+grep -o 'https://[a-z0-9]*\.lhr\.life' /tmp/localhost_run.log | head -1
 ```
 
 ## Stop Everything
 
 ```bash
-pkill -f cloudflared
-pkill -f "http.server 8080"
+pkill -f "ssh.*localhost.run"
+pkill -f "http-server"
 ```
+
+## Troubleshooting
+
+### Python http.server issues
+Don't use `python3 -m http.server` - it binds to IPv6 by default and can return empty responses. Use `npx http-server` instead.
+
+### Cloudflare tunnel issues
+If cloudflared tunnel gives 502 errors, use localhost.run instead - it's simpler and more reliable.
+
+### Server dies after some time
+The background server may stop. Re-run the Quick Start commands to restart everything.

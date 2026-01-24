@@ -57,7 +57,7 @@ export function render(renderData) {
 function renderBattleTab(rd) {
     renderBattleArea(rd);
     renderActiveBuffs(rd);
-    renderSpellBar(rd);
+    // Spell bar removed - only bonuses now
     renderBattleLog(rd);
     renderStatsBar(rd);
 }

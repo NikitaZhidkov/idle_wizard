@@ -222,15 +222,38 @@ export function renderShieldMinigame(rd) {
     ctx.textAlign = 'center';
     ctx.fillText('🛡️ Block the incoming spell!', centerX, 80);
 
-    // Flying spells
+    // Spell color info for display
+    const spellInfo = {
+        red: { icon: '🔥', name: 'FIRE', color: '#ff4444', glow: '#ff6666' },
+        blue: { icon: '💧', name: 'WATER', color: '#4488ff', glow: '#66aaff' },
+        yellow: { icon: '⚡', name: 'LIGHTNING', color: '#ffdd44', glow: '#ffee66' },
+        green: { icon: '🌿', name: 'NATURE', color: '#44dd44', glow: '#66ff66' }
+    };
+
+    // Flying spells - show prominent spell indicator
     const spells = rd.shieldSpells || [];
     spells.forEach(spell => {
         if (spell.flying) {
-            ctx.font = '30px Arial';
-            ctx.fillStyle = spell.color === 'red' ? '#ff4444' :
-                           spell.color === 'blue' ? '#4488ff' :
-                           spell.color === 'yellow' ? '#ffdd44' : '#44dd44';
-            ctx.fillText('✨', spell.x, spell.y);
+            const info = spellInfo[spell.color] || spellInfo.red;
+
+            // Large spell icon with glow effect
+            ctx.save();
+            ctx.shadowColor = info.glow;
+            ctx.shadowBlur = 20;
+            ctx.font = '50px Arial';
+            ctx.fillStyle = info.color;
+            ctx.fillText(info.icon, centerX, 150);
+            ctx.restore();
+
+            // Spell name label
+            ctx.font = 'bold 24px Georgia';
+            ctx.fillStyle = info.color;
+            ctx.fillText(info.name, centerX, 195);
+
+            // "Press matching button!" hint
+            ctx.font = '14px Georgia';
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText('Press the matching button!', centerX, 220);
         }
     });
 
@@ -271,21 +294,37 @@ export function renderShieldMinigame(rd) {
         ctx.fillText(c.icon, bx + btnSize / 2, btnY + btnSize / 2 + 8);
     });
 
-    // Timer bar
+    // Timer bar - colored to match current spell
     const timerWidth = totalWidth;
-    const timerHeight = 8;
+    const timerHeight = 12;
     const timerX = startX;
-    const timerY = btnY - 30;
+    const timerY = btnY - 35;
 
+    // Get current spell color for timer
+    const currentSpell = spells.find(s => s.flying);
+    const timerColors = {
+        red: '#ff4444',
+        blue: '#4488ff',
+        yellow: '#ffdd44',
+        green: '#44dd44'
+    };
+    const timerColor = currentSpell ? (timerColors[currentSpell.color] || COLORS.gold) : COLORS.gold;
+
+    // Background
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.beginPath();
-    ctx.roundRect(timerX, timerY, timerWidth, timerHeight, 4);
+    ctx.roundRect(timerX, timerY, timerWidth, timerHeight, 6);
     ctx.fill();
 
-    ctx.fillStyle = COLORS.gold;
+    // Progress bar with spell color and glow
+    ctx.save();
+    ctx.shadowColor = timerColor;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = timerColor;
     ctx.beginPath();
-    ctx.roundRect(timerX, timerY, timerWidth * (rd.shieldTimer / 100), timerHeight, 4);
+    ctx.roundRect(timerX, timerY, timerWidth * (rd.shieldTimer / 100), timerHeight, 6);
     ctx.fill();
+    ctx.restore();
 
     // Result
     if (rd.shieldResult) {

@@ -26,11 +26,7 @@ export function getClickTarget(x, y, canvasW, canvasH, layout, renderData) {
         return { type: 'roomContinue' };
     }
 
-    // Check spell bar
-    const spellBarY = layout.HEADER_HEIGHT + layout.TABS_HEIGHT + layout.TABS_PADDING + layout.BATTLE_AREA_HEIGHT + layout.BATTLE_AREA_MARGIN + layout.BUFFS_HEIGHT;
-    if (y >= spellBarY && y <= spellBarY + layout.SPELL_BAR_HEIGHT) {
-        return getSpellClick(x, y, canvasW, renderData, spellBarY);
-    }
+    // Spell bar removed - only bonuses now
 
     return null;
 }

@@ -96,6 +96,8 @@ function handleClick(x, y, canvasWidth, canvasHeight, layout) {
     const renderData = getRenderData();
     const target = getClickTarget(x, y, canvasWidth, canvasHeight, layout, renderData);
 
+    console.log('[CLICK] x:', x, 'y:', y, 'target:', target, 'spells:', renderData.spells);
+
     if (!target) return;
 
     switch (target.type) {

@@ -2,7 +2,7 @@
  * Buff Selection System
  */
 
-import { BUFF_TEMPLATES, computePlayerStats } from '../entities/index.js';
+import { BUFF_TEMPLATES, SPELL_TEMPLATES, computePlayerStats } from '../entities/index.js';
 import { emit } from './events.js';
 import { getSession, getPlayer, getRenderData, addLog } from './state.js';
 import { spawnCreature } from './spawn.js';
@@ -10,13 +10,22 @@ import { startBattleLoop } from './battle.js';
 
 export function showBuffSelection() {
     const session = getSession();
+    const player = getPlayer();
     const renderData = getRenderData();
 
     session.state = 'buffSelect';
     renderData.showBuffSelect = true;
 
+    // Filter out already-learned spells
+    const availableBuffs = BUFF_TEMPLATES.filter(buff => {
+        if (buff.effect.unlockSpell) {
+            return !player.unlockedSpells.includes(buff.effect.unlockSpell);
+        }
+        return true;
+    });
+
     // Generate 3 random buff choices
-    const shuffled = [...BUFF_TEMPLATES].sort(() => Math.random() - 0.5);
+    const shuffled = [...availableBuffs].sort(() => Math.random() - 0.5);
     const choices = shuffled.slice(0, 3);
     session.buffChoices = choices;
     renderData.buffChoices = choices;
@@ -66,6 +75,13 @@ export function selectBuff(buffId) {
     if (effect.goldNow) {
         player.gold += effect.goldNow;
         addLog(`+${effect.goldNow} Gold!`, 'log-gold');
+    }
+    if (effect.unlockSpell) {
+        if (!player.unlockedSpells.includes(effect.unlockSpell)) {
+            player.unlockedSpells.push(effect.unlockSpell);
+            const spell = SPELL_TEMPLATES.find(s => s.id === effect.unlockSpell);
+            addLog(`Learned ${spell ? spell.name : effect.unlockSpell}!`, 'log-spell');
+        }
     }
 
     // Apply HP increase

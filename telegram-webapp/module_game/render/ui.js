@@ -25,17 +25,17 @@ export function renderHeader(rd) {
     ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${formatNum(rd.gold)} Galleons`, 12, 16);
+    ctx.fillText(`${formatNum(rd.gold)} Gold`, 12, 16);
 
     ctx.fillStyle = COLORS.textMuted;
     ctx.font = '12px Arial';
-    ctx.fillText(`${rd.gems} Sickles | ${rd.skillPoints} XP`, 12, 34);
+    ctx.fillText(`${rd.gems} Gems | ${rd.skillPoints} XP`, 12, 34);
 
     // Right - Level/Floor
     ctx.fillStyle = COLORS.text;
     ctx.font = '14px Arial';
     ctx.textAlign = 'right';
-    ctx.fillText(`Year ${rd.level}`, canvasWidth - 12, 16);
+    ctx.fillText(`Level ${rd.level}`, canvasWidth - 12, 16);
 
     ctx.fillStyle = COLORS.textMuted;
     ctx.font = '12px Arial';
@@ -47,11 +47,11 @@ export function renderTabs(rd) {
     const canvasWidth = getCanvasWidth();
 
     const tabs = [
-        { id: 'battle', label: '⚔️ Duel' },
-        { id: 'spellbook', label: '📜 Spells' },
-        { id: 'skills', label: '📚 Studies' },
-        { id: 'shop', label: '🏪 Diagon' },
-        { id: 'bestiary', label: '📖 Creatures' }
+        { id: 'battle', label: '⚔️ Battle' },
+        { id: 'inventory', label: '🎒 Items' },
+        { id: 'skills', label: '📊 Stats' },
+        { id: 'shop', label: '🏪 Shop' },
+        { id: 'bestiary', label: '📖 Bestiary' }
     ];
 
     const startY = LAYOUT.HEADER_HEIGHT + LAYOUT.TABS_PADDING;

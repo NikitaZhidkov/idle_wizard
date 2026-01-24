@@ -35,8 +35,8 @@ function battleTick() {
     const player = getPlayer();
     const creature = getCreature();
 
+    // If no creature or creature is dead, skip (handleCreatureDeath handles progression)
     if (!creature || creature.hp <= 0) {
-        spawnCreature();
         return;
     }
 

@@ -24,11 +24,16 @@ export function initGame() {
     setPlayer(player);
     setRenderData(renderData);
 
-    // Start at house selection
-    session.state = 'houseSelect';
-    renderData.showHouseSelect = true;
+    // Skip house selection - start game directly
+    const stats = computePlayerStats(player);
+    player.currentHp = stats.hp;
+    player.maxHp = stats.hp;
 
     emit('init');
+
+    // Start the game immediately
+    startGame();
+
     return { session, player, renderData };
 }
 
@@ -57,14 +62,8 @@ export function selectHouse(houseName) {
 
     renderData.showHouseSelect = false;
 
-    // Check spell tutorial
-    if (!player.spellTutorialDone) {
-        session.state = 'spellTutorial';
-        renderData.showSpellTutorial = true;
-        renderData.spellTutorialPage = 1;
-    } else {
-        startGame();
-    }
+    // Spell tutorial removed - go directly to game
+    startGame();
 }
 
 export function nextTutorialPage() {

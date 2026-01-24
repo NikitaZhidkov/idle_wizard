@@ -31,8 +31,8 @@ export function updateRenderData() {
     // Hero
     renderData.heroHp = player.currentHp;
     renderData.heroMaxHp = stats.hp;
-    renderData.heroName = 'Wizard';
-    renderData.houseIcon = player.house ? HOUSE_DATA[player.house].icon : '🧙';
+    renderData.heroName = 'Hero';
+    renderData.houseIcon = '⚔️';
 
     // Stats
     renderData.atk = stats.atk;
