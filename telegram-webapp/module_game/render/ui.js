@@ -10,15 +10,6 @@ export function renderHeader(rd) {
     const ctx = getCtx();
     const canvasWidth = getCanvasWidth();
 
-    ctx.fillStyle = COLORS.headerBg;
-    ctx.fillRect(0, 0, canvasWidth, LAYOUT.HEADER_HEIGHT);
-
-    ctx.strokeStyle = COLORS.border;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, LAYOUT.HEADER_HEIGHT - 1);
-    ctx.lineTo(canvasWidth, LAYOUT.HEADER_HEIGHT - 1);
-    ctx.stroke();
 
     // Left - Currency
     ctx.fillStyle = COLORS.gold;

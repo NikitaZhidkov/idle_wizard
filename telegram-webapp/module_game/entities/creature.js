@@ -8,8 +8,8 @@ export function createCreatureState(template, floor = 1, isBoss = false) {
     // Bosses already have higher base stats, so use lower multipliers
     const hpMult = isBoss ? 1.2 : 1;
     const atkMult = isBoss ? 1.1 : 1;
-    // Gentler floor scaling
-    const scaledHp = Math.floor(template.hp * (1 + floor * 0.02) * hpMult);
+    // Gentler floor scaling, reduced HP by 70%
+    const scaledHp = Math.floor(template.hp * (1 + floor * 0.02) * hpMult * 0.3);
     const scaledAtk = Math.floor(template.atk * (1 + floor * 0.01) * atkMult);
     const scaledGold = Math.floor(template.gold * hpMult);
 

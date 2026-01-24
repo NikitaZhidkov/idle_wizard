@@ -3,7 +3,7 @@
  */
 
 import { LAYOUT, COLORS } from './constants.js';
-import { initRenderer, getCanvas, getCtx, getCanvasWidth, getCanvasHeight } from './canvas.js';
+import { initRenderer, getCanvas, getCtx, getCanvasWidth, getCanvasHeight, renderBackground, scrollBackground } from './canvas.js';
 import { renderBattleArea } from './battle-area.js';
 import { renderHeader, renderTabs, renderActiveBuffs, renderSpellBar, renderBattleLog, renderStatsBar } from './ui.js';
 import { renderFloatingTexts, renderParticles } from './effects.js';
@@ -27,9 +27,11 @@ export function render(renderData) {
 
     if (!ctx || !renderData) return;
 
-    // Clear
-    ctx.fillStyle = COLORS.background;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // Draw background (or fallback to solid color)
+    if (!renderBackground()) {
+        ctx.fillStyle = COLORS.background;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    }
 
     // Base UI
     renderHeader(renderData);
@@ -63,6 +65,6 @@ function renderBattleTab(rd) {
 }
 
 // Re-exports
-export { initRenderer, getCanvas } from './canvas.js';
+export { initRenderer, getCanvas, scrollBackground } from './canvas.js';
 export { getClickTarget } from './hit-test.js';
 export { LAYOUT, COLORS } from './constants.js';

@@ -15,27 +15,9 @@ export function renderBattleArea(rd) {
     const areaHeight = LAYOUT.BATTLE_AREA_HEIGHT;
     const x = LAYOUT.BATTLE_AREA_MARGIN;
 
-    // Background
-    const gradient = ctx.createLinearGradient(x, startY, x, startY + areaHeight);
-    gradient.addColorStop(0, '#2a2535');
-    gradient.addColorStop(1, '#1e1a28');
-
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.roundRect(x, startY, areaWidth, areaHeight, 12);
-    ctx.fill();
-
-    ctx.strokeStyle = COLORS.battleAreaBorder;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Ground
+    // Ground Y position (used for placing hero/creature)
     const groundHeight = 30;
     const groundY = startY + areaHeight - groundHeight;
-    ctx.fillStyle = COLORS.groundColor;
-    ctx.beginPath();
-    ctx.roundRect(x + 2, groundY, areaWidth - 4, groundHeight - 2, [0, 0, 10, 10]);
-    ctx.fill();
 
     // Boss indicator
     if (rd.isBoss) {

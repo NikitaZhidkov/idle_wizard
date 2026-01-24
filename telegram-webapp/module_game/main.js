@@ -32,7 +32,8 @@ import {
     initRenderer,
     render,
     getClickTarget,
-    getCanvas
+    getCanvas,
+    scrollBackground
 } from './render/index.js';
 
 import { HOUSE_DATA, SPELL_TEMPLATES } from './entities/index.js';
@@ -157,6 +158,7 @@ function setupEventHandlers() {
 
     on('creatureKilled', (data) => {
         console.log(`[GAME] Killed creature, +${data.goldGain} gold`);
+        scrollBackground();
     });
 }
 
