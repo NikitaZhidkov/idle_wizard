@@ -18,7 +18,6 @@ export function createCreatureState(template, floor = 1, isBoss = false) {
         name: template.name,
         icon: template.icon,
         magic: template.magic,
-        abilities: [...template.abilities],
         boss: isBoss,
         spriteIndex: template.spriteIndex,
 
@@ -26,12 +25,6 @@ export function createCreatureState(template, floor = 1, isBoss = false) {
         hp: scaledHp,
         maxHp: scaledHp,
         atk: scaledAtk,
-        gold: scaledGold,
-
-        // Status flags
-        hasShield: false,
-        enraged: false,
-        shieldPhase1: false,
-        shieldPhase2: false
+        gold: scaledGold
     });
 }

@@ -3,7 +3,7 @@
  * Synchronizes game state with render data for display
  */
 
-import { HOUSE_DATA, SPELL_TEMPLATES, MAGIC_TYPES, ABILITIES, computePlayerStats } from '../entities/index.js';
+import { computePlayerStats } from '../entities/index.js';
 import { getSession, getPlayer, getCreature, getRenderData, getFloatingTexts, getParticles, getBattleLog, updateEffects } from './state.js';
 
 export function updateRenderData() {
@@ -46,18 +46,11 @@ export function updateRenderData() {
         renderData.creatureHp = creature.hp;
         renderData.creatureMaxHp = creature.maxHp;
         renderData.creatureSpriteIndex = creature.spriteIndex;
-        renderData.creatureAbilities = creature.abilities
-            .map(ab => ABILITIES[ab])
-            .filter(a => a)
-            .map(a => ({ icon: a.icon, name: a.name }));
-        renderData.creatureHasShield = creature.hasShield;
         renderData.isBoss = creature.boss;
     } else {
         renderData.creatureName = '';
         renderData.creatureHp = 0;
         renderData.creatureMaxHp = 100;
-        renderData.creatureAbilities = [];
-        renderData.creatureHasShield = false;
         renderData.isBoss = false;
     }
 
@@ -75,21 +68,6 @@ export function updateRenderData() {
         name: b.name,
         count: b.count
     }));
-
-    // Spells
-    renderData.spells = SPELL_TEMPLATES
-        .filter(s => player.unlockedSpells.includes(s.id))
-        .map(s => {
-            const cd = player.spellCooldowns[s.id] || 0;
-            return {
-                id: s.id,
-                icon: s.icon,
-                magicIcon: MAGIC_TYPES[s.magic].icon,
-                cooldown: cd,
-                isReady: cd === 0,
-                isBlocked: player.fearDebuff && s.type === 'attack'
-            };
-        });
 
     // Battle log
     renderData.battleLog = getBattleLog();

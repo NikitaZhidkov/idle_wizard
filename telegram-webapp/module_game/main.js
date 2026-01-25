@@ -14,16 +14,8 @@ import {
     getCreature,
     getRenderData,
     updateRenderData,
-    selectHouse,
-    advanceSpellTutorial,
-    finishSpellTutorial,
-    startShieldFromTutorial,
-    handleShieldPress,
     selectBuff,
-    castSpell,
     restartGame,
-    startCooldownTick,
-    stopCooldownTick,
     on,
     emit
 } from './systems/index.js';
@@ -36,7 +28,6 @@ import {
     scrollBackground
 } from './render/index.js';
 
-import { HOUSE_DATA, SPELL_TEMPLATES } from './entities/index.js';
 
 // ============ AUDIO ============
 
@@ -97,28 +88,13 @@ function handleClick(x, y, canvasWidth, canvasHeight, layout) {
     const renderData = getRenderData();
     const target = getClickTarget(x, y, canvasWidth, canvasHeight, layout, renderData);
 
-    console.log('[CLICK] x:', x, 'y:', y, 'target:', target, 'spells:', renderData.spells);
+    console.log('[CLICK] x:', x, 'y:', y, 'target:', target);
 
     if (!target) return;
 
     switch (target.type) {
-        case 'houseSelect':
-            selectHouse(target.house);
-            break;
-        case 'tutorialNext':
-            advanceSpellTutorial();
-            break;
-        case 'shieldTutorialStart':
-            startShieldFromTutorial();
-            break;
-        case 'shieldPress':
-            handleShieldPress(target.color);
-            break;
         case 'buffSelect':
             selectBuff(target.buffId);
-            break;
-        case 'spellCast':
-            castSpell(target.spellId);
             break;
         case 'restart':
             restartGame();
@@ -185,25 +161,14 @@ function init() {
     // Start render loop
     startRenderLoop();
 
-    // Start cooldown tick
-    startCooldownTick();
-
     // Expose game state for testing
     window.game = {
         get session() { return getSession(); },
         get player() { return getPlayer(); },
         get creature() { return getCreature(); },
         get renderData() { return getRenderData(); },
-        selectHouse,
-        advanceSpellTutorial,
-        finishSpellTutorial,
-        startShieldFromTutorial,
-        handleShieldPress,
         selectBuff,
-        castSpell,
-        restartGame,
-        HOUSE_DATA,
-        SPELL_TEMPLATES
+        restartGame
     };
 
     console.log('[MODULE_GAME] Initialized successfully');

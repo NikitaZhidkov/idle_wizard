@@ -6,9 +6,6 @@
 export {
     CONFIG,
     MAGIC_TYPES,
-    ABILITIES,
-    SHIELD_COLORS,
-    SHIELD_ICONS,
     getMagicMultiplier
 } from './config.js';
 
@@ -17,9 +14,7 @@ export {
     CREATURE_TEMPLATES,
     BOSS_TEMPLATES,
     ENCOUNTER_ORDER,
-    SPELL_TEMPLATES,
-    BUFF_TEMPLATES,
-    HOUSE_DATA
+    BUFF_TEMPLATES
 } from './templates.js';
 
 // Entity registry

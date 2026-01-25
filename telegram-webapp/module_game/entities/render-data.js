@@ -8,10 +8,6 @@ export function createRenderData() {
         screen: 'battle', // battle, spellbook, skills, shop, bestiary
 
         // Popups
-        showHouseSelect: false,
-        showSpellTutorial: false,
-        showShieldTutorial: false,
-        showShieldMinigame: false,
         showBuffSelect: false,
         showRoomTransition: false,
         showGameOver: false,
@@ -35,8 +31,6 @@ export function createRenderData() {
         creatureHp: 0,
         creatureMaxHp: 100,
         creatureSpriteIndex: 0,
-        creatureAbilities: [],
-        creatureHasShield: false,
 
         // Combat
         isBoss: false,
@@ -44,9 +38,6 @@ export function createRenderData() {
 
         // Buffs bar
         activeBuffs: [],
-
-        // Spell bar
-        spells: [],
 
         // Battle log
         battleLog: [],
@@ -62,16 +53,9 @@ export function createRenderData() {
         particles: [],
 
         // Popup data
-        spellTutorialPage: 1,
         buffChoices: [],
         gameOverData: { floor: 1, kills: 0, gold: 0, combo: 0 },
         victoryData: { kills: 0, gold: 0, combo: 0 },
-        roomTransitionData: { loot: 0, nextRoom: 2 },
-
-        // Shield minigame
-        shieldSpells: [],
-        shieldHighlightColor: null,
-        shieldTimer: 100,
-        shieldResult: ''
+        roomTransitionData: { loot: 0, nextRoom: 2 }
     };
 }

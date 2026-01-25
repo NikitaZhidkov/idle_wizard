@@ -1,5 +1,5 @@
 /**
- * UI rendering - header, tabs, spell bar, stats bar, battle log, buffs
+ * UI rendering - header, tabs, stats bar, battle log, buffs
  */
 
 import { LAYOUT, COLORS } from './constants.js';
@@ -103,47 +103,6 @@ export function renderActiveBuffs(rd) {
             ctx.fillStyle = COLORS.gold;
             ctx.fillText(`x${buff.count}`, bx + buffSize / 2 - 4, by + buffSize / 2);
             ctx.font = '16px Arial';
-        }
-    });
-}
-
-export function renderSpellBar(rd) {
-    const ctx = getCtx();
-    const canvasWidth = getCanvasWidth();
-
-    const startY = LAYOUT.HEADER_HEIGHT + LAYOUT.TABS_HEIGHT + LAYOUT.TABS_PADDING + LAYOUT.BATTLE_AREA_HEIGHT + LAYOUT.BATTLE_AREA_MARGIN + LAYOUT.BUFFS_HEIGHT;
-    const spells = rd.spells || [];
-
-    if (spells.length === 0) return;
-
-    const spellSize = 44;
-    const spellPadding = 6;
-    const totalWidth = spells.length * (spellSize + spellPadding) - spellPadding;
-    const startX = (canvasWidth - totalWidth) / 2;
-
-    spells.forEach((spell, i) => {
-        const sx = startX + i * (spellSize + spellPadding);
-        const sy = startY + 3;
-
-        let bgColor = spell.isBlocked ? COLORS.spellBlocked : spell.isReady ? COLORS.spellReady : COLORS.spellCooldown;
-        ctx.fillStyle = bgColor;
-        ctx.beginPath();
-        ctx.roundRect(sx, sy, spellSize, spellSize, 8);
-        ctx.fill();
-
-        ctx.strokeStyle = spell.isReady && !spell.isBlocked ? COLORS.spellReadyBorder : COLORS.spellBorder;
-        ctx.lineWidth = spell.isReady && !spell.isBlocked ? 2 : 1;
-        ctx.stroke();
-
-        ctx.font = '20px Arial';
-        ctx.fillStyle = COLORS.text;
-        ctx.textAlign = 'center';
-        ctx.fillText(spell.icon, sx + spellSize / 2, sy + spellSize / 2);
-
-        if (spell.cooldown > 0) {
-            ctx.font = '10px Arial';
-            ctx.fillStyle = COLORS.textMuted;
-            ctx.fillText(`${spell.cooldown}s`, sx + spellSize / 2, sy + spellSize - 6);
         }
     });
 }

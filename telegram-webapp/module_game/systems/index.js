@@ -30,11 +30,6 @@ export {
 // Game flow (FSM)
 export {
     initGame,
-    selectHouse,
-    nextTutorialPage,
-    advanceSpellTutorial,
-    finishSpellTutorial,
-    endSpellTutorial,
     startGame,
     triggerGameOver,
     triggerVictory,
@@ -54,22 +49,6 @@ export {
     spawnCreature,
     handleCreatureDeath
 } from './spawn.js';
-
-// Spell system
-export {
-    castSpell,
-    startCooldownTick,
-    stopCooldownTick
-} from './spells.js';
-
-// Shield minigame
-export {
-    shouldTriggerShieldMinigame,
-    startShieldMinigame,
-    startShieldFromTutorial,
-    handleShieldPress,
-    stopShieldTimer
-} from './shield.js';
 
 // Buff system
 export {

@@ -2,11 +2,10 @@
  * Battle System - combat logic and damage calculations
  */
 
-import { CONFIG, MAGIC_TYPES, getMagicMultiplier, computePlayerStats } from '../entities/index.js';
+import { CONFIG, getMagicMultiplier, computePlayerStats } from '../entities/index.js';
 import { emit } from './events.js';
 import { getSession, getPlayer, getCreature, setCreature, addLog, addFloatingText, addParticles } from './state.js';
 import { spawnCreature, handleCreatureDeath } from './spawn.js';
-import { shouldTriggerShieldMinigame, startShieldMinigame } from './shield.js';
 
 let battleLoopId = null;
 
@@ -16,7 +15,7 @@ export function startBattleLoop() {
     }
     battleLoopId = setInterval(() => {
         const session = getSession();
-        if (session.gameStarted && !session.shieldActive && session.state === 'playing') {
+        if (session.gameStarted && session.state === 'playing') {
             battleTick();
         }
     }, CONFIG.BATTLE_TICK_MS);
@@ -53,12 +52,6 @@ function battleTick() {
         return;
     }
 
-    // Shield minigame check for bosses (disabled for now)
-    // if (shouldTriggerShieldMinigame()) {
-    //     startShieldMinigame();
-    //     return;
-    // }
-
     // Process player debuffs on enemy (DoT)
     processDebuffs();
 
@@ -69,9 +62,6 @@ function battleTick() {
 
     // Process player buffs
     processBuffs(stats);
-
-    // Process creature abilities
-    processCreatureAbilities();
 
     // Creature attack
     if (!isEnemyStunned()) {
@@ -110,11 +100,6 @@ export function calculatePlayerDamage(stats, creature) {
         damage = Math.floor(damage * (1 + stats.executeDmg));
     }
 
-    if (creature.hasShield) {
-        damage = Math.floor(damage * 0.5);
-        creature.hasShield = false;
-    }
-
     if (stats.doubleAttack) {
         damage = Math.floor(damage * 2);
     }
@@ -126,12 +111,6 @@ export function applyDamageToCreature(damage, isCrit, mult) {
     const player = getPlayer();
     const creature = getCreature();
     const stats = computePlayerStats(player);
-
-    // Check dodge
-    if (creature.abilities.includes('DODGE') && Math.random() < 0.15) {
-        addFloatingText('MISS', 220, 160, 'resist');
-        return;
-    }
 
     creature.hp -= damage;
     const floatType = isCrit ? 'crit' : (mult > 1 ? 'effective' : '');
@@ -150,12 +129,7 @@ export function applyDamageToCreature(damage, isCrit, mult) {
 
 function calculateCreatureDamage(stats) {
     const creature = getCreature();
-    const player = getPlayer();
     let damage = Math.max(1, creature.atk - Math.floor(stats.def * 0.6));
-
-    if (creature.enraged) {
-        damage = Math.floor(damage * 1.5);
-    }
 
     const atkMod = getEnemyAtkMod();
     damage = Math.floor(damage * atkMod);
@@ -186,14 +160,6 @@ function applyDamageToPlayer(damage, stats) {
         const reflectDmg = Math.floor(damage * reflectMod);
         creature.hp -= reflectDmg;
         addFloatingText(`-${reflectDmg}🛡️`, 220, 130, 'spell');
-    }
-
-    // Creature reflect ability
-    if (creature.abilities.includes('REFLECT')) {
-        const reflectDmg = Math.floor(damage * 0.2);
-        player.currentHp -= reflectDmg;
-        addFloatingText(`-${reflectDmg}`, 100, 150);
-        addLog(`💫 Reflect: -${reflectDmg} HP`, 'log-damage');
     }
 
     player.currentHp -= damage;
@@ -273,54 +239,4 @@ function getReflectMod() {
     const player = getPlayer();
     const reflect = player.combatBuffs.find(b => b.type === 'reflect');
     return reflect ? reflect.value : 0;
-}
-
-function processCreatureAbilities() {
-    const player = getPlayer();
-    const creature = getCreature();
-    const stats = computePlayerStats(player);
-
-    if (!creature) return;
-
-    creature.abilities.forEach(ab => {
-        switch (ab) {
-            case 'REGEN':
-                if (creature.hp < creature.maxHp) {
-                    const heal = Math.floor(creature.maxHp * 0.05);
-                    creature.hp = Math.min(creature.maxHp, creature.hp + heal);
-                    addFloatingText(`+${heal}`, 220, 150, 'heal');
-                }
-                break;
-            case 'SHIELD':
-                if (Math.random() < 0.25) {
-                    creature.hasShield = true;
-                }
-                break;
-            case 'RAGE':
-                if (creature.hp < creature.maxHp * 0.3) {
-                    creature.enraged = true;
-                }
-                break;
-            case 'POISON':
-                if (Math.random() < 0.3) {
-                    player.poisonStacks = Math.min(5, player.poisonStacks + 1);
-                    addLog('Poisoned!', 'log-damage');
-                }
-                break;
-            case 'FEAR':
-                if (Math.random() < 0.2) {
-                    player.fearDebuff = true;
-                    addLog('Terrified! Attack reduced!', 'log-damage');
-                }
-                break;
-        }
-    });
-
-    // Apply poison damage to player
-    if (player.poisonStacks > 0) {
-        const dmg = Math.floor(stats.hp * 0.02 * player.poisonStacks);
-        player.currentHp -= dmg;
-        addFloatingText(`-${dmg} ☠️`, 60, 150);
-        addLog(`☠️ Poison (${player.poisonStacks}x): -${dmg} HP`, 'log-damage');
-    }
 }

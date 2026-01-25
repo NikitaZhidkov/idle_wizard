@@ -16,8 +16,6 @@ export const CONFIG = {
 
     // Battle timing
     BATTLE_TICK_MS: 900,
-    SHIELD_BASE_TIME_MS: 2000,
-    SHIELD_TUTORIAL_TIME_MS: 4000,
 
     // Rewards
     HEAL_AFTER_KILL_PERCENT: 0.35,
@@ -36,26 +34,6 @@ export const MAGIC_TYPES = {
     CREATURES: { name: 'Creatures', icon: '🐉', color: '#228b22', beats: 'DEFENSE', weakTo: 'CHARMS' },
     TRANSFIG: { name: 'Transfig', icon: '🔄', color: '#9932cc', beats: null, weakTo: null },
     NONE: { name: 'Basic', icon: '⚪', color: '#888', beats: null, weakTo: null }
-};
-
-export const ABILITIES = {
-    REGEN: { id: 'REGEN', name: 'Regeneration', icon: '💚', desc: 'Heals each turn' },
-    SHIELD: { id: 'SHIELD', name: 'Protego', icon: '🛡️', desc: 'Blocks damage' },
-    RAGE: { id: 'RAGE', name: 'Enraged', icon: '😤', desc: 'Stronger when hurt' },
-    POISON: { id: 'POISON', name: 'Venomous', icon: '☠️', desc: 'Poisons you' },
-    DODGE: { id: 'DODGE', name: 'Evasive', icon: '💨', desc: 'Dodges attacks' },
-    REFLECT: { id: 'REFLECT', name: 'Reflect', icon: '🪞', desc: 'Returns damage' },
-    DISARM: { id: 'DISARM', name: 'Expelliarmus', icon: '🪄', desc: 'Can disarm you' },
-    FEAR: { id: 'FEAR', name: 'Terrifying', icon: '😱', desc: 'Reduces your damage' }
-};
-
-export const SHIELD_COLORS = ['red', 'blue', 'yellow', 'green'];
-
-export const SHIELD_ICONS = {
-    red: { icon: '🔥', name: 'Fire' },
-    blue: { icon: '💧', name: 'Water' },
-    yellow: { icon: '⚡', name: 'Lightning' },
-    green: { icon: '🌿', name: 'Nature' }
 };
 
 export function getMagicMultiplier(attackMagic, defenderMagic) {

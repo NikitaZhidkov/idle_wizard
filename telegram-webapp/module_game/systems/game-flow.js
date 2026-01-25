@@ -1,14 +1,13 @@
 /**
  * Game Flow System
- * Handles FSM transitions, initialization, house selection, tutorials
+ * Handles FSM transitions, initialization
  */
 
-import { HOUSE_DATA, clearEntities, createPlayerState, createGameSession, createRenderData, computePlayerStats } from '../entities/index.js';
+import { clearEntities, createPlayerState, createGameSession, createRenderData, computePlayerStats } from '../entities/index.js';
 import { emit } from './events.js';
 import { setSession, setPlayer, setCreature, setRenderData, getSession, getPlayer, getRenderData, clearState, addLog } from './state.js';
 import { spawnCreature } from './spawn.js';
 import { startBattleLoop, stopBattleLoop } from './battle.js';
-import { stopShieldTimer } from './shield.js';
 
 export function initGame() {
     clearEntities();
@@ -24,7 +23,7 @@ export function initGame() {
     setPlayer(player);
     setRenderData(renderData);
 
-    // Skip house selection - start game directly
+    // Initialize player stats
     const stats = computePlayerStats(player);
     player.currentHp = stats.hp;
     player.maxHp = stats.hp;
@@ -35,82 +34,6 @@ export function initGame() {
     startGame();
 
     return { session, player, renderData };
-}
-
-export function selectHouse(houseName) {
-    const session = getSession();
-    const player = getPlayer();
-    const renderData = getRenderData();
-
-    if (session.state !== 'houseSelect') return;
-
-    const house = HOUSE_DATA[houseName];
-    if (!house) return;
-
-    player.house = houseName;
-    player.houseChosen = true;
-    player.unlockedSpells = [house.spell];
-
-    // Apply house stats
-    const stats = computePlayerStats(player);
-    player.currentHp = stats.hp;
-    player.maxHp = stats.hp;
-
-    addLog(`Welcome to ${house.name}!`, 'log-levelup');
-    emit('houseSelected', { house: houseName });
-    emit('sound', { freq: 800, type: 'sine', duration: 0.2 });
-
-    renderData.showHouseSelect = false;
-
-    // Spell tutorial removed - go directly to game
-    startGame();
-}
-
-export function nextTutorialPage() {
-    const session = getSession();
-    const renderData = getRenderData();
-
-    if (session.state !== 'spellTutorial') return;
-
-    renderData.spellTutorialPage++;
-    emit('sound', { freq: 600, type: 'sine', duration: 0.1 });
-}
-
-export function advanceSpellTutorial() {
-    const session = getSession();
-    const renderData = getRenderData();
-
-    if (session.state !== 'spellTutorial') return;
-
-    if (renderData.spellTutorialPage < 3) {
-        renderData.spellTutorialPage++;
-        emit('sound', { freq: 500, type: 'sine', duration: 0.1 });
-    } else {
-        finishSpellTutorial();
-    }
-}
-
-export function finishSpellTutorial() {
-    const player = getPlayer();
-    const renderData = getRenderData();
-
-    player.spellTutorialDone = true;
-    renderData.showSpellTutorial = false;
-    emit('sound', { freq: 800, type: 'sine', duration: 0.2 });
-    startGame();
-}
-
-export function endSpellTutorial() {
-    const session = getSession();
-    const player = getPlayer();
-    const renderData = getRenderData();
-
-    if (session.state !== 'spellTutorial') return;
-
-    player.spellTutorialDone = true;
-    renderData.showSpellTutorial = false;
-    emit('sound', { freq: 800, type: 'sine', duration: 0.2 });
-    startGame();
 }
 
 export function startGame() {
@@ -182,6 +105,5 @@ export function triggerVictory() {
 
 export function restartGame() {
     stopBattleLoop();
-    stopShieldTimer();
     initGame();
 }

@@ -5,13 +5,9 @@
 import { LAYOUT, COLORS } from './constants.js';
 import { initRenderer, getCanvas, getCtx, getCanvasWidth, getCanvasHeight, renderBackground, scrollBackground } from './canvas.js';
 import { renderBattleArea } from './battle-area.js';
-import { renderHeader, renderTabs, renderActiveBuffs, renderSpellBar, renderBattleLog, renderStatsBar } from './ui.js';
+import { renderHeader, renderTabs, renderActiveBuffs, renderBattleLog, renderStatsBar } from './ui.js';
 import { renderFloatingTexts, renderParticles } from './effects.js';
 import {
-    renderHouseSelect,
-    renderSpellTutorial,
-    renderShieldTutorial,
-    renderShieldMinigame,
     renderBuffSelect,
     renderRoomTransition,
     renderGameOver,
@@ -49,12 +45,8 @@ export function render(renderData) {
     // Popups (in order of priority)
     if (renderData.showRoomTransition) renderRoomTransition(renderData);
     if (renderData.showBuffSelect) renderBuffSelect(renderData);
-    if (renderData.showShieldMinigame) renderShieldMinigame(renderData);
-    if (renderData.showShieldTutorial) renderShieldTutorial(renderData);
-    if (renderData.showSpellTutorial) renderSpellTutorial(renderData);
     if (renderData.showGameOver) renderGameOver(renderData);
     if (renderData.showVictory) renderVictory(renderData);
-    if (renderData.showHouseSelect) renderHouseSelect(renderData);
 }
 
 function renderBattleTab(rd) {

@@ -32,10 +32,6 @@ export function initState() {
 
     renderData = createRenderData();
 
-    // Start at house selection
-    session.state = 'houseSelect';
-    renderData.showHouseSelect = true;
-
     emit('init');
     return { session, player, renderData };
 }
