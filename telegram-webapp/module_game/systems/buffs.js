@@ -105,6 +105,8 @@ export function continueToNextRoom() {
     const renderData = getRenderData();
 
     renderData.showBuffSelect = false;
+    renderData.buffChoices = [];
+    session.buffChoices = [];
     session.selectingBuff = false;
 
     session.state = 'playing';

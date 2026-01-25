@@ -75,17 +75,22 @@ function getBuffSelectClick(x, y, canvasW, canvasH, renderData) {
 
     const buffWidth = 90;
     const buffHeight = 100;
-    const totalWidth = buffs.length * (buffWidth + 10) - 10;
+    const gap = 10;
+    const totalWidth = buffs.length * (buffWidth + gap) - gap;
     const startX = canvasW / 2 - totalWidth / 2;
-    const startY = canvasH / 2 - buffHeight / 2;
+    // Match the rendering position: centered in bottom half of screen
+    const bottomHalfY = canvasH * 0.5;
+    const bottomHalfCenterY = bottomHalfY + (canvasH * 0.5) / 2;
+    const startY = bottomHalfCenterY - buffHeight / 2;
 
     for (let i = 0; i < buffs.length; i++) {
-        const bx = startX + i * (buffWidth + 10);
+        const bx = startX + i * (buffWidth + gap);
         if (x >= bx && x <= bx + buffWidth && y >= startY && y <= startY + buffHeight) {
             return { type: 'buffSelect', buffId: buffs[i].id };
         }
     }
-    return null;
+    // Return null but don't propagate clicks during buff selection
+    return { type: 'none' };
 }
 
 function getSpellClick(x, y, canvasW, renderData, spellBarY) {

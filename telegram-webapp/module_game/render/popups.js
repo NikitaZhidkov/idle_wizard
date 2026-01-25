@@ -339,23 +339,26 @@ export function renderBuffSelect(rd) {
     const canvasWidth = getCanvasWidth();
     const canvasHeight = getCanvasHeight();
 
+    // Only darken the bottom half of the screen (UI area)
+    const bottomHalfY = canvasHeight * 0.5;
     ctx.fillStyle = 'rgba(15, 15, 20, 0.85)';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillRect(0, bottomHalfY, canvasWidth, canvasHeight * 0.5);
 
     const centerX = canvasWidth / 2;
-    const centerY = canvasHeight / 2;
+    // Center vertically in the bottom half
+    const bottomHalfCenterY = bottomHalfY + (canvasHeight * 0.5) / 2;
 
     ctx.fillStyle = COLORS.gold;
     ctx.font = '18px Georgia';
     ctx.textAlign = 'center';
-    ctx.fillText('🎁 Choose a reward:', centerX, centerY - 70);
+    ctx.fillText('🎁 Choose a reward:', centerX, bottomHalfCenterY - 70);
 
     const buffs = rd.buffChoices || [];
     const buffWidth = 90;
     const buffHeight = 100;
     const totalWidth = buffs.length * (buffWidth + 10) - 10;
     const startX = centerX - totalWidth / 2;
-    const startY = centerY - buffHeight / 2;
+    const startY = bottomHalfCenterY - buffHeight / 2;
 
     buffs.forEach((buff, i) => {
         const bx = startX + i * (buffWidth + 10);

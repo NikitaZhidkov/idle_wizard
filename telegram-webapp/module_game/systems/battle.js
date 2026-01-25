@@ -53,11 +53,11 @@ function battleTick() {
         return;
     }
 
-    // Shield minigame check for bosses
-    if (shouldTriggerShieldMinigame()) {
-        startShieldMinigame();
-        return;
-    }
+    // Shield minigame check for bosses (disabled for now)
+    // if (shouldTriggerShieldMinigame()) {
+    //     startShieldMinigame();
+    //     return;
+    // }
 
     // Process player debuffs on enemy (DoT)
     processDebuffs();

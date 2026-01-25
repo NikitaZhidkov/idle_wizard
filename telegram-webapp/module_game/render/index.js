@@ -27,11 +27,12 @@ export function render(renderData) {
 
     if (!ctx || !renderData) return;
 
-    // Draw background (or fallback to solid color)
-    if (!renderBackground()) {
-        ctx.fillStyle = COLORS.background;
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    }
+    // Clear entire canvas first
+    ctx.fillStyle = COLORS.background;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw background (covers top 50%)
+    renderBackground();
 
     // Base UI
     renderHeader(renderData);
